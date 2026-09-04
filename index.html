@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ERP - Control de Almacén y Logística</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-dark: #0f172a;
+            --secondary: #0f766e;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --success: #16a34a;
+            --sidebar-bg: #0b1329;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #f1f5f9; color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
+
+        /* PANTALLA DE LOGIN */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--sidebar-bg); z-index: 9999; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .login-card {
+            background: var(--card-bg); padding: 2.5rem; border-radius: 8px;
+            width: 100%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+            border-top: 5px solid #38bdf8;
+        }
+        .login-card h2 { color: var(--primary); margin-bottom: 1.5rem; text-align: center; font-size: 1.5rem; }
+
+        /* BARRA LATERAL ESTILO ERP */
+        aside {
+            width: 270px; background-color: var(--sidebar-bg); color: #ffffff;
+            display: flex; flex-direction: column; justify-content: space-between;
+            height: 100vh; border-right: 1px solid #1e293b; flex-shrink: 0; z-index: 100;
+        }
+
+        .sidebar-brand { padding: 1.25rem 1.5rem; border-bottom: 1px solid #1e293b; background: #070d1b; }
+        .sidebar-brand h2 { font-size: 1.1rem; color: #38bdf8; font-weight: 700; letter-spacing: 0.5px; }
+        .sidebar-nav { flex: 1; overflow-y: auto; padding: 0.5rem 0; }
+
+        .nav-item {
+            display: flex; align-items: center; padding: 0.75rem 1.5rem; color: #94a3b8; text-decoration: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent;
+            background: transparent; width: 100%; border: none; text-align: left;
+        }
+        .nav-item:hover { color: #ffffff; background: rgba(255, 255, 255, 0.04); }
+        .nav-item.active { color: #ffffff; background: rgba(56, 189, 248, 0.1); border-left-color: #38bdf8; }
+        .nav-item .nav-icon { font-size: 1rem; min-width: 28px; text-align: center; }
+
+        .sidebar-footer { padding: 0.75rem 1rem; border-top: 1px solid #1e293b; background: #060a14; display: flex; align-items: center; justify-content: space-between; }
+        .user-footer-box { display: flex; align-items: center; gap: 0.75rem; }
+        .user-avatar { width: 34px; height: 34px; background: #2563eb; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 0.9rem; }
+        .user-info h4 { font-size: 0.8rem; color: #f8fafc; }
+        .user-info p { font-size: 0.65rem; color: #38bdf8; font-weight: 600; }
+        .btn-logout { background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 1.1rem; }
+        .btn-logout:hover { color: var(--danger); }
+
+        /* CONTENEDOR PRINCIPAL */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { background: var(--primary-dark); color: white; padding: 0.85rem 2rem; flex-shrink: 0; border-bottom: 3px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.2rem; font-weight: 600; }
+        header p { font-size: 0.75rem; opacity: 0.7; }
+
+        .container { padding: 1.5rem; max-width: 1450px; margin: 0 auto; width: 100%; flex: 1; overflow-y: auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card { background: var(--card-bg); border-radius: 6px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary); border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.75rem; }
+        .form-group label { font-size: 0.8rem; font-weight: 700; color: var(--text-dark); text-transform: uppercase; }
+        .form-group input, .form-group select { padding: 0.55rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; outline: none; background: #fff; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(30,58,138,0.1); }
+
+        .btn { padding: 0.55rem 1.1rem; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: var(--secondary); color: white; }
+        .btn-secondary:hover { background: #0d9488; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-success { background: var(--success); color: white; }
+
+        .table-responsive { overflow-x: auto; margin-top: 0.75rem; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+        th { background: #e2e8f0; color: var(--text-dark); font-weight: 700; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e1; }
+        td { padding: 0.6rem 0.75rem; border: 1px solid #cbd5e1; }
+        .badge { padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.7rem; font-weight: 700; display: inline-block; text-transform: uppercase; }
+        .badge-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .badge-warning { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+
+        /* DISEÑO DE PLANILLAS Y FORMATOS CORPORATIVOS PARA IMPRESIÓN */
+        .print-header-format { display: none; margin-bottom: 1.5rem; border-bottom: 2px solid #000; padding-bottom: 1rem; }
+        .print-header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .print-company-info h2 { font-size: 1.3rem; font-weight: bold; color: #000; }
+        .print-company-info p { font-size: 0.8rem; color: #333; }
+        .print-doc-box { border: 2px solid #000; padding: 0.5rem 1rem; text-align: center; border-radius: 4px; }
+        .print-doc-box h3 { font-size: 1rem; font-weight: bold; }
+        .print-doc-box p { font-size: 0.8rem; }
+
+        .print-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem; font-size: 0.85rem; background: #f8fafc; padding: 0.5rem; border: 1px solid #94a3b8; }
+
+        .print-signatures-box { display: none; margin-top: 3.5rem; justify-content: space-between; }
+        .signature-line { width: 45%; border-top: 1px solid #000; text-align: center; padding-top: 0.4rem; font-size: 0.8rem; font-weight: bold; }
+
+        @media print {
+            body * { visibility: hidden; }
+            .printable-area, .printable-area * { visibility: visible; }
+            .printable-area { 
+                position: absolute; left: 0; top: 0; width: 100%; background: white !important; padding: 1.5rem !important; 
+                box-shadow: none !important; border: none !important;
+            }
+            .no-print { display: none !important; }
+            .print-header-format { display: block !important; }
+            .print-signatures-box { display: flex !important; }
+            table { border-color: #000 !important; }
+            th, td { border-color: #000 !important; color: #000 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- PANTALLA DE ACCESO -->
+<div id="login-overlay">
+    <div class="login-card">
+        <h2>🔒 ERP LOGÍSTICA & ALMACÉN</h2>
+        <div class="form-group">
+            <label>Usuario</label>
+            <input type="text" id="login-user" placeholder="Ej: yivy">
+        </div>
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="login-pass" placeholder="********">
+        </div>
+        <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="intentarLogin()">Iniciar Sesión ERP</button>
+        <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 1rem;">Default: yivy / 1234</p>
+    </div>
+</div>
+
+<aside id="app-sidebar" style="display:none;">
+    <div>
+        <div class="sidebar-brand">
+            <h2>📦 ERP ALMACÉN PRO</h2>
+        </div>
+        <div class="sidebar-nav">
+            <button class="nav-item active" onclick="switchTab('inventario')"><span class="nav-icon">📊</span><span>Inventario General</span></button>
+            <button class="nav-item" onclick="switchTab('registrar-prod')"><span class="nav-icon">🏷️</span><span>Registrar Producto</span></button>
+            <button class="nav-item" onclick="switchTab('ingresos')"><span class="nav-icon">📥</span><span>Entradas / Compras</span></button>
+            <button class="nav-item" onclick="switchTab('mostrador')"><span class="nav-icon">🛒</span><span>Salidas Mostrador</span></button>
+            <button class="nav-item" onclick="switchTab('salidas-area')"><span class="nav-icon">🏢</span><span>Salidas por Área</span></button>
+            <button class="nav-item" onclick="switchTab('logistica')"><span class="nav-icon">🚚</span><span>Envíos Transportadora</span></button>
+            <button class="nav-item" onclick="switchTab('areas')"><span class="nav-icon">👔</span><span>Áreas y Jefaturas</span></button>
+            <button class="nav-item" onclick="switchTab('historial')"><span class="nav-icon">📜</span><span>Historial y Trazabilidad</span></button>
+            <button class="nav-item" onclick="switchTab('usuarios')"><span class="nav-icon">🔑</span><span>Gestión de Usuarios</span></button>
+        </div>
+    </div>
+    <div class="sidebar-footer">
+        <div class="user-footer-box">
+            <div class="user-avatar" id="sidebar-avatar">Y</div>
+            <div class="user-info">
+                <h4 id="sidebar-username">YIVY GUERRERO</h4>
+                <p>Sesión Activa</p>
+            </div>
+        </div>
+        <button class="btn-logout" onclick="cerrarSesion()" title="Cerrar Sesión">🚪</button>
+    </div>
+</aside>
+
+<div class="main-wrapper" id="app-main-wrapper" style="display:none;">
+    <header>
+        <div>
+            <h1>Módulo de Gestión Logística e Inventarios</h1>
+            <p>Control automatizado tipo ERP - Trazabilidad y Planillas Oficiales</p>
+        </div>
+        <div id="header-clock" style="font-size: 0.8rem; font-weight: bold; background: rgba(255,255,255,0.1); padding: 0.3rem 0.8rem; border-radius: 4px;"></div>
+    </header>
+
+    <main class="container">
+
+        <!-- 1. INVENTARIO -->
+        <section id="tab-inventario" class="tab-content active">
+            <div class="card printable-area">
+                <div class="print-header-format">
+                    <div class="print-header-top">
+                        <div class="print-company-info">
+                            <h2>SISTEMA INTEGRADO DE ALMACÉN</h2>
+                            <p>NIT: 900.823.112-5 | Control General de Stock</p>
+                        </div>
+                        <div class="print-doc-box">
+                            <h3>REPORTE DE INVENTARIO</h3>
+                            <p>Fecha: <span class="fecha-print-val"></span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-title">
+                    <span>Catálogo Actual de Inventario</span>
+                    <button class="btn btn-secondary no-print" onclick="window.print()">🖨️ Imprimir Inventario Completo</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Código</th><th>Descripción Producto</th><th>Clasificación</th><th>Tipo Específico</th><th>Stock Actual</th><th>Stock Mínimo</th></tr></thead>
+                        <tbody id="tbody-inventario"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. REGISTRAR PRODUCTO -->
+        <section id="tab-registrar-prod" class="tab-content">
+            <div class="card">
+                <div class="card-title"><span>Formato de Alta de Nuevo Producto</span></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Código de Producto</label><input type="text" id="reg-prod-codigo" placeholder="Ej: INS-005"></div>
+                    <div class="form-group"><label>Nombre del Producto</label><input type="text" id="reg-prod-nombre" placeholder="Nombre descriptivo oficial"></div>
+                    <div class="form-group">
+                        <label>Clasificación General</label>
+                        <select id="reg-prod-clase">
+                            <option value="Insumo">Insumo</option>
+                            <option value="Herramienta">Herramienta</option>
+                            <option value="Equipo">Equipo</option>
+                            <option value="EPP">EPP (Protección Personal)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Tipo de Producto</label><input type="text" id="reg-prod-tipo" placeholder="Ej: Eléctrico, Mecánico, Químico"></div>
+                    <div class="form-group"><label>Stock Inicial</label><input type="number" id="reg-prod-stock" min="0" value="0"></div>
+                    <div class="form-group"><label>Stock Mínimo Alerta</label><input type="number" id="reg-prod-min" min="0" value="5"></div>
+                </div>
+                <button class="btn btn-primary" onclick="guardarNuevoProducto()">💾 Registrar Producto en Base de Datos</button>
+            </div>
+        </section>
+
+        <!-- 3. INGRESOS / COMPRAS -->
+        <section id="tab-ingresos" class="tab-content">
+            <div class="card">
+                <div class="card-title"><span>Registro de Entrada de Mercancía (Compras / Proveedores)</span></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Seleccionar Producto</label><select id="ingreso-prod-select"></select></div>
+                    <div class="form-group"><label>Cantidad a Recibir</label><input type="number" id="ingreso-cant-input" min="1" value="1"></div>
+                    <div class="form-group"><label>Proveedor / Origen</label><input type="text" id="ingreso-proveedor" placeholder="Ej: Comercializadora Minera S.A."></div>
+                </div>
+                <button class="btn btn-secondary" onclick="agregarItemCarritoIngreso()">➕ Agregar Ítem al Documento</button>
+
+                <div class="table-responsive" style="margin-top: 1rem;">
+                    <h4>Detalle de Ítems a Ingresar:</h4>
+                    <table>
+                        <thead><tr><th>Código</th><th>Producto</th><th>Cantidad</th><th>Acción</th></tr></thead>
+                        <tbody id="tbody-carrito-ingreso"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr></tbody>
+                    </table>
+                </div>
+                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="finalizarIngresoMercancia()">✅ Procesar Ingreso y Actualizar Stock</button>
+            </div>
+        </section>
+
+        <!-- 4. SALIDAS MOSTRADOR -->
+        <section id="tab-mostrador" class="tab-content">
+            <div class="card">
+                <div class="card-title"><span>Salida Diaria por Mostrador / Ventas</span></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Nombre del Cliente / Receptor</label><input type="text" id="mostrador-cliente" placeholder="Nombre completo"></div>
+                    <div class="form-group"><label>Seleccionar Producto</label><select id="mostrador-prod-select"></select></div>
+                    <div class="form-group"><label>Cantidad</label><input type="number" id="mostrador-cant-input" min="1" value="1"></div>
+                </div>
+                <button class="btn btn-secondary" onclick="agregarItemCarritoMostrador()">➕ Agregar Ítem al Comprobante</button>
+
+                <div class="table-responsive" style="margin-top: 1rem;">
+                    <h4>Ítems del Despacho de Mostrador:</h4>
+                    <table>
+                        <thead><tr><th>Código</th><th>Producto</th><th>Cantidad</th><th>Acción</th></tr></thead>
+                        <tbody id="tbody-carrito-mostrador"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr></tbody>
+                    </table>
+                </div>
+                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="finalizarSalidaMostrador()">✅ Registrar y Generar Salida</button>
+            </div>
+        </section>
+
+        <!-- 5. SALIDAS POR ÁREA -->
+        <section id="tab-salidas-area" class="tab-content">
+            <div class="card printable-area">
+                <div class="print-header-format">
+                    <div class="print-header-top">
+                        <div class="print-company-info">
+                            <h2>SISTEMA INTEGRADO DE ALMACÉN Y LOGÍSTICA</h2>
+                            <p>COMPROBANTE OFICIAL DE DESPACHO INTERNO</p>
+                        </div>
+                        <div class="print-doc-box">
+                            <h3>PLANILLA DE SALIDA POR ÁREA</h3>
+                            <p>Fecha: <span class="fecha-print-val"></span></p>
+                        </div>
+                    </div>
+                    <div class="print-meta-grid" id="print-area-meta">
+                        <div><strong>Área Solicitante:</strong> <span id="lbl-print-area">---</span></div>
+                        <div><strong>Jefe Responsable:</strong> <span id="lbl-print-jefe">---</span></div>
+                    </div>
+                </div>
+
+                <div class="card-title">
+                    <span>Planilla de Despacho por Área y Consumo Interno</span>
+                    <button class="btn btn-success no-print" onclick="window.print()">🖨️ Imprimir Planilla Oficial</button>
+                </div>
+                <div class="form-grid no-print">
+                    <div class="form-group"><label>Área Solicitante</label><select id="area-sel" onchange="actualizarInfoAreaPrint()"></select></div>
+                    <div class="form-group"><label>Producto</label><select id="area-prod-select"></select></div>
+                    <div class="form-group"><label>Cantidad</label><input type="number" id="area-cant-input" min="1" value="1"></div>
+                </div>
+                <button class="btn btn-secondary no-print" onclick="agregarItemCarritoArea()">➕ Agregar Ítem a la Planilla</button>
+
+                <div class="table-responsive" style="margin-top: 1rem;">
+                    <h4>Ítems Solicitados:</h4>
+                    <table>
+                        <thead><tr><th>Código</th><th>Descripción del Producto</th><th>Clasificación</th><th>Cantidad Entregada</th></tr></thead>
+                        <tbody id="tbody-carrito-area"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr></tbody>
+                    </table>
+                </div>
+
+                <div class="print-signatures-box">
+                    <div class="signature-line">Firma Responsable Área Solicitante</div>
+                    <div class="signature-line">Firma Encargado de Almacén</div>
+                </div>
+
+                <div style="margin-top: 1.5rem;" class="no-print">
+                    <button class="btn btn-primary" onclick="finalizarSalidaArea()">✅ Autorizar y Registrar Salida por Área</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. ENVÍOS TRANSPORTADORA -->
+        <section id="tab-logistica" class="tab-content">
+            <div class="card printable-area">
+                <div class="print-header-format">
+                    <div class="print-header-top">
+                        <div class="print-company-info">
+                            <h2>SISTEMA INTEGRADO DE ALMACÉN</h2>
+                            <p>GUÍA OFICIAL DE TRANSPORTE Y LOGÍSTICA</p>
+                        </div>
+                        <div class="print-doc-box">
+                            <h3>PLANILLA DE ENVÍO</h3>
+                            <p>Fecha: <span class="fecha-print-val"></span></p>
+                        </div>
+                    </div>
+                    <div class="print-meta-grid" id="print-trans-meta">
+                        <div><strong>Transportadora:</strong> <span id="lbl-print-emp">---</span></div>
+                        <div><strong>Conductor / Placa:</strong> <span id="lbl-print-cond">---</span></div>
+                    </div>
+                </div>
+
+                <div class="card-title">
+                    <span>Control de Envíos por Transportadora (Despachos al Pueblo)</span>
+                    <button class="btn btn-success no-print" onclick="window.print()">🖨️ Imprimir Guía de Envío</button>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Empresa Transportadora</label><input type="text" id="trans-emp" placeholder="Ej: Servientrega / Carga" oninput="actualizarInfoTransPrint()"></div>
+                    <div class="form-group"><label>Nombre del Conductor</label><input type="text" id="trans-cond" placeholder="Nombre completo" oninput="actualizarInfoTransPrint()"></div>
+                    <div class="form-group"><label>Placa del Vehículo</label><input type="text" id="trans-placa" placeholder="ABC-123"></div>
+                    <div class="form-group"><label>Destino / Número de Guía</label><input type="text" id="trans-guia" placeholder="Pueblo / Guía #"></div>
+                </div>
+
+                <h4 style="margin-top: 1rem; color: var(--primary);" class="no-print">Detalle de Mercancía a Enviar</h4>
+                <div class="form-grid no-print" style="margin-top: 0.5rem;">
+                    <div class="form-group"><label>Descripción del Ítem o Carga</label><input type="text" id="trans-item-desc" placeholder="Descripción libre o caja"></div>
+                    <div class="form-group"><label>Cantidad</label><input type="number" id="trans-item-cant" min="1" value="1"></div>
+                </div>
+                <button class="btn btn-secondary no-print" onclick="agregarItemTransportadora()">➕ Agregar Carga al Envío</button>
+
+                <div class="table-responsive" style="margin-top: 1rem;">
+                    <table>
+                        <thead><tr><th>Descripción de la Carga / Ítem</th><th>Cantidad</th></tr></thead>
+                        <tbody id="tbody-trans-items"><tr><td colspan="2" style="text-align:center; color:var(--text-muted);">Sin carga anexada</td></tr></tbody>
+                    </table>
+                </div>
+
+                <div class="print-signatures-box">
+                    <div class="signature-line">Firma Despachador Logística</div>
+                    <div class="signature-line">Firma Conductor (Recibe Conforme)</div>
+                </div>
+
+                <div style="margin-top: 1.5rem;" class="no-print">
+                    <button class="btn btn-primary" onclick="registrarEnvioTransportadora()">✅ Consolidar y Registrar Envío</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. ÁREAS Y JEFATURAS -->
+        <section id="tab-areas" class="tab-content">
+            <div class="card">
+                <div class="card-title"><span>Administración de Áreas y Jefaturas Autorizadas</span></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Nombre del Área</label><input type="text" id="in-nombre-area" placeholder="Ej: Operaciones Mineras"></div>
+                    <div class="form-group"><label>Jefe Responsable</label><input type="text" id="in-jefe-area" placeholder="Ej: Ing. Carlos Gómez"></div>
+                </div>
+                <button class="btn btn-primary" onclick="crearArea()">Registrar Área</button>
+                <div class="table-responsive" style="margin-top: 1rem;">
+                    <table>
+                        <thead><tr><th>Área Organizacional</th><th>Jefe Responsable</th></tr></thead>
+                        <tbody id="tbody-areas"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. HISTORIAL DE MOVIMIENTOS -->
+        <section id="tab-historial" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>Historial de Movimientos y Trazabilidad (Haz clic en cualquier fila para desplegar su planilla detallada e imprimirla)</span>
+                    <button class="btn btn-secondary no-print" onclick="limpiarHistorial()" style="font-size: 0.75rem;">Limpiar Historial</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Fecha / Hora</th><th>Tipo de Movimiento</th><th>Destino / Proveedor / Detalle</th><th>Total Ítems</th></tr></thead>
+                        <tbody id="tbody-historial"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. GESTIÓN DE USUARIOS -->
+        <section id="tab-usuarios" class="tab-content">
+            <div class="card">
+                <div class="card-title"><span>Gestión de Usuarios, Credenciales y Accesos al Sistema</span></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Nombre de Usuario (Login)</label><input type="text" id="nuevo-user" placeholder="Ej: yivy.guerrero"></div>
+                    <div class="form-group"><label>Nombre Completo</label><input type="text" id="nuevo-nombre-completo" placeholder="Ej: Yivy Guerrero"></div>
+                    <div class="form-group"><label>Contraseña</label><input type="password" id="nuevo-pass" placeholder="********"></div>
+                </div>
+                <button class="btn btn-primary" onclick="registrarNuevoUsuario()">➕ Crear Usuario de Acceso</button>
+                <div class="table-responsive" style="margin-top: 1rem;">
+                    <table>
+                        <thead><tr><th>Usuario</th><th>Nombre Completo</th><th>Estado</th><th>Acción</th></tr></thead>
+                        <tbody id="tbody-usuarios"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script>
+    let usuarios = [
+        { user: "yivy", nombre: "YIVY GUERRERO", pass: "1234" }
+    ];
+
+    let inventario = [
+        { codigo: "PRD-001", nombre: "Casco de Seguridad Dieléctrico", clase: "EPP", tipo: "Protección Cabeza", stock: 50, min: 10 },
+        { codigo: "PRD-002", nombre: "Guantes de Nitrilo Reforzados (Caja x100)", clase: "Insumo", tipo: "Consumible", stock: 30, min: 15 },
+        { codigo: "PRD-003", nombre: "Botas de Seguridad con Puntera de Acero", clase: "EPP", tipo: "Calzado Industrial", stock: 25, min: 5 }
+    ];
+
+    let areasLista = [
+        { nombre: "Operaciones Mineras", jefe: "Ing. Carlos Gómez" },
+        { nombre: "Mantenimiento General", jefe: "Tec. Mario Ruiz" }
+    ];
+
+    let carritoIngreso = [];
+    let carritoMostrador = [];
+    let carritoArea = [];
+    let carritoTransportadora = [];
+    let historialSalidas = [];
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const fechaStr = new Date().toLocaleString();
+        document.querySelectorAll('.fecha-print-val').forEach(el => el.innerText = fechaStr);
+        
+        setInterval(() => {
+            const clock = document.getElementById('header-clock');
+            if(clock) clock.innerText = new Date().toLocaleTimeString();
+        }, 1000);
+    });
+
+    function intentarLogin() {
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value.trim();
+        let encontrado = usuarios.find(x => x.user === u && x.pass === p);
+        if(encontrado) {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('app-sidebar').style.display = 'flex';
+            document.getElementById('app-main-wrapper').style.display = 'flex';
+            document.getElementById('sidebar-username').innerText = encontrado.nombre;
+            document.getElementById('sidebar-avatar').innerText = encontrado.nombre.charAt(0);
+            renderInventario();
+            renderSelects();
+            renderAreas();
+            renderUsuarios();
+            renderHistorial();
+        } else {
+            alert('Usuario o contraseña incorrectos.');
+        }
+    }
+
+    function cerrarSesion() {
+        document.getElementById('login-overlay').style.display = 'flex';
+        document.getElementById('app-sidebar').style.display = 'none';
+        document.getElementById('app-main-wrapper').style.display = 'none';
+        document.getElementById('login-user').value = '';
+        document.getElementById('login-pass').value = '';
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            if(btn.getAttribute('onclick')?.includes(tabId)) btn.classList.add('active');
+        });
+    }
+
+    function renderInventario() {
+        const tbody = document.getElementById('tbody-inventario');
+        tbody.innerHTML = '';
+        inventario.forEach(p => {
+            tbody.innerHTML += `<tr><td><strong>${p.codigo}</strong></td><td>${p.nombre}</td><td>${p.clase}</td><td>${p.tipo}</td><td>${p.stock}</td><td>${p.min}</td></tr>`;
+        });
+    }
+
+    function renderSelects() {
+        const si = document.getElementById('ingreso-prod-select');
+        const sm = document.getElementById('mostrador-prod-select');
+        const sa = document.getElementById('area-prod-select');
+        const ar = document.getElementById('area-sel');
+        if(si) si.innerHTML = ''; if(sm) sm.innerHTML = ''; if(sa) sa.innerHTML = ''; if(ar) ar.innerHTML = '';
+
+        inventario.forEach(p => {
+            let opt = `<option value="${p.codigo}">[${p.codigo}] ${p.nombre} (Stock: ${p.stock})</option>`;
+            if(si) si.innerHTML += opt;
+            if(sm) sm.innerHTML += opt;
+            if(sa) sa.innerHTML += opt;
+        });
+
+        areasLista.forEach(a => {
+            if(ar) ar.innerHTML += `<option value="${a.nombre}">${a.nombre} (Jefe: ${a.jefe})</option>`;
+        });
+        actualizarInfoAreaPrint();
+    }
+
+    function actualizarInfoAreaPrint() {
+        const areaSel = document.getElementById('area-sel').value;
+        let obj = areasLista.find(a => a.nombre === areaSel);
+        if(obj) {
+            document.getElementById('lbl-print-area').innerText = obj.nombre;
+            document.getElementById('lbl-print-jefe').innerText = obj.jefe;
+        }
+    }
+
+    function actualizarInfoTransPrint() {
+        document.getElementById('lbl-print-emp').innerText = document.getElementById('trans-emp').value || '---';
+        document.getElementById('lbl-print-cond').innerText = (document.getElementById('trans-cond').value + ' (Placa: ' + (document.getElementById('trans-placa').value || '---') + ')') || '---';
+    }
+
+    function guardarNuevoProducto() {
+        const codigo = document.getElementById('reg-prod-codigo').value.trim();
+        const nombre = document.getElementById('reg-prod-nombre').value.trim();
+        const clase = document.getElementById('reg-prod-clase').value;
+        const tipo = document.getElementById('reg-prod-tipo').value.trim();
+        const stock = parseInt(document.getElementById('reg-prod-stock').value);
+        const min = parseInt(document.getElementById('reg-prod-min').value);
+
+        if(!codigo || !nombre || !tipo) return alert('Complete todos los campos obligatorios.');
+        if(inventario.some(p => p.codigo === codigo)) return alert('Ya existe un producto registrado con este código.');
+
+        inventario.push({ codigo, nombre, clase, tipo, stock, min });
+        alert('Producto dado de alta exitosamente.');
+        document.getElementById('reg-prod-codigo').value = '';
+        document.getElementById('reg-prod-nombre').value = '';
+        document.getElementById('reg-prod-tipo').value = '';
+        renderInventario();
+        renderSelects();
+    }
+
+    /* CARRITO INGRESO */
+    function agregarItemCarritoIngreso() {
+        const cod = document.getElementById('ingreso-prod-select').value;
+        const cant = parseInt(document.getElementById('ingreso-cant-input').value);
+        let prod = inventario.find(p => p.codigo === cod);
+        carritoIngreso.push({ codigo: cod, nombre: prod.nombre, cantidad: cant });
+        renderCarritoIngreso();
+    }
+
+    function renderCarritoIngreso() {
+        const tbody = document.getElementById('tbody-carrito-ingreso');
+        if(carritoIngreso.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = '';
+        carritoIngreso.forEach((item, index) => {
+            tbody.innerHTML += `<tr><td>${item.codigo}</td><td>${item.nombre}</td><td>${item.cantidad}</td><td><button class="btn btn-danger" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="carritoIngreso.splice(${index},1); renderCarritoIngreso();">Eliminar</button></td></tr>`;
+        });
+    }
+
+    function finalizarIngresoMercancia() {
+        const proveedor = document.getElementById('ingreso-proveedor').value.trim();
+        if(!proveedor || carritoIngreso.length === 0) return alert('Ingrese el proveedor y agregue ítems.');
+
+        carritoIngreso.forEach(item => {
+            let p = inventario.find(x => x.codigo === item.codigo);
+            if(p) p.stock += item.cantidad;
+        });
+
+        historialSalidas.unshift({
+            fecha: new Date().toLocaleString(),
+            tipo: '📥 Ingreso / Compra',
+            destino: `Proveedor: ${proveedor}`,
+            items: [...carritoIngreso]
+        });
+
+        carritoIngreso = [];
+        renderCarritoIngreso();
+        renderInventario();
+        renderSelects();
+        renderHistorial();
+        alert('Ingreso de mercancía registrado correctamente.');
+    }
+
+    /* CARRITO MOSTRADOR */
+    function agregarItemCarritoMostrador() {
+        const cod = document.getElementById('mostrador-prod-select').value;
+        const cant = parseInt(document.getElementById('mostrador-cant-input').value);
+        let prod = inventario.find(p => p.codigo === cod);
+        if(prod.stock < cant) return alert('Stock insuficiente en inventario.');
+        carritoMostrador.push({ codigo: cod, nombre: prod.nombre, cantidad: cant });
+        renderCarritoMostrador();
+    }
+
+    function renderCarritoMostrador() {
+        const tbody = document.getElementById('tbody-carrito-mostrador');
+        if(carritoMostrador.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = '';
+        carritoMostrador.forEach((item, index) => {
+            tbody.innerHTML += `<tr><td>${item.codigo}</td><td>${item.nombre}</td><td>${item.cantidad}</td><td><button class="btn btn-danger" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="carritoMostrador.splice(${index},1); renderCarritoMostrador();">Eliminar</button></td></tr>`;
+        });
+    }
+
+    function finalizarSalidaMostrador() {
+        const cliente = document.getElementById('mostrador-cliente').value.trim();
+        if(!cliente || carritoMostrador.length === 0) return alert('Ingrese el cliente y agregue ítems.');
+
+        carritoMostrador.forEach(item => {
+            let p = inventario.find(x => x.codigo === item.codigo);
+            if(p) p.stock -= item.cantidad;
+        });
+
+        historialSalidas.unshift({
+            fecha: new Date().toLocaleString(),
+            tipo: '🛒 Salida Mostrador',
+            destino: `Cliente: ${cliente}`,
+            items: [...carritoMostrador]
+        });
+
+        carritoMostrador = [];
+        renderCarritoMostrador();
+        renderInventario();
+        renderSelects();
+        renderHistorial();
+        alert('Salida por mostrador registrada con éxito.');
+    }
+
+    /* CARRITO ÁREA */
+    function agregarItemCarritoArea() {
+        const cod = document.getElementById('area-prod-select').value;
+        const cant = parseInt(document.getElementById('area-cant-input').value);
+        let prod = inventario.find(p => p.codigo === cod);
+        if(prod.stock < cant) return alert('Stock insuficiente en inventario.');
+        carritoArea.push({ codigo: cod, nombre: prod.nombre, clase: prod.clase, cantidad: cant });
+        renderCarritoArea();
+    }
+
+    function renderCarritoArea() {
+        const tbody = document.getElementById('tbody-carrito-area');
+        if(carritoArea.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = '';
+        carritoArea.forEach(item => {
+            tbody.innerHTML += `<tr><td><strong>${item.codigo}</strong></td><td>${item.nombre}</td><td>${item.clase}</td><td><strong>${item.cantidad}</strong></td></tr>`;
+        });
+    }
+
+    function finalizarSalidaArea() {
+        const area = document.getElementById('area-sel').value;
+        if(carritoArea.length === 0) return alert('Agregue al menos un ítem al despacho.');
+
+        carritoArea.forEach(item => {
+            let p = inventario.find(x => x.codigo === item.codigo);
+            if(p) p.stock -= item.cantidad;
+        });
+
+        historialSalidas.unshift({
+            fecha: new Date().toLocaleString(),
+            tipo: '🏢 Salida por Área',
+            destino: `Área: ${area}`,
+            items: [...carritoArea]
+        });
+
+        carritoArea = [];
+        renderCarritoArea();
+        renderInventario();
+        renderSelects();
+        renderHistorial();
+        alert('Despacho por área autorizado y registrado.');
+    }
+
+    /* TRANSPORTADORA */
+    function agregarItemTransportadora() {
+        const desc = document.getElementById('trans-item-desc').value.trim();
+        const cant = parseInt(document.getElementById('trans-item-cant').value);
+        if(!desc) return alert('Ingrese la descripción de la carga.');
+        carritoTransportadora.push({ nombre: desc, cantidad: cant });
+        renderCarritoTransportadora();
+        document.getElementById('trans-item-desc').value = '';
+    }
+
+    function renderCarritoTransportadora() {
+        const tbody = document.getElementById('tbody-trans-items');
+        if(carritoTransportadora.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--text-muted);">Sin carga anexada</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = '';
+        carritoTransportadora.forEach(item => {
+            tbody.innerHTML += `<tr><td>${item.nombre}</td><td><strong>${item.cantidad}</strong></td></tr>`;
+        });
+    }
+
+    function registrarEnvioTransportadora() {
+        const emp = document.getElementById('trans-emp').value.trim();
+        const cond = document.getElementById('trans-cond').value.trim();
+        const guia = document.getElementById('trans-guia').value.trim();
+        if(!emp || !cond || carritoTransportadora.length === 0) return alert('Complete los datos de la transportadora.');
+
+        historialSalidas.unshift({
+            fecha: new Date().toLocaleString(),
+            tipo: '🚚 Envío Transportadora',
+            destino: `Empresa: ${emp} | Conductor: ${cond} | Guía: ${guia}`,
+            items: [...carritoTransportadora]
+        });
+
+        carritoTransportadora = [];
+        renderCarritoTransportadora();
+        renderHistorial();
+        alert('Guía de transporte registrada con éxito.');
+    }
+
+    /* ÁREAS */
+    function crearArea() {
+        const nombre = document.getElementById('in-nombre-area').value.trim();
+        const jefe = document.getElementById('in-jefe-area').value.trim();
+        if(!nombre || !jefe) return alert('Complete los datos del área.');
+        areasLista.push({ nombre, jefe });
+        document.getElementById('in-nombre-area').value = '';
+        document.getElementById('in-jefe-area').value = '';
+        renderAreas();
+        renderSelects();
+    }
+
+    function renderAreas() {
+        const tbody = document.getElementById('tbody-areas');
+        tbody.innerHTML = '';
+        areasLista.forEach(a => {
+            tbody.innerHTML += `<tr><td><strong>${a.nombre}</strong></td><td>${a.jefe}</td></tr>`;
+        });
+    }
+
+    /* HISTORIAL CON DESPLIEGUE E IMPRESIÓN DE PLANILLA COMPLETA */
+    function renderHistorial() {
+        const tbody = document.getElementById('tbody-historial');
+        tbody.innerHTML = '';
+        if(historialSalidas.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No hay movimientos registrados en el sistema.</td></tr>`;
+            return;
+        }
+        historialSalidas.forEach((h, index) => {
+            tbody.innerHTML += `
+                <tr style="cursor: pointer;" onclick="toggleDetalle(${index})">
+                    <td>${h.fecha}</td>
+                    <td><span class="badge badge-warning">${h.tipo}</span></td>
+                    <td><strong>${h.destino}</strong></td>
+                    <td>${h.items.length} ítem(s) 🔽 Haz clic para ver planilla</td>
+                </tr>
+                <tr id="detalle-${index}" style="display: none; background: #f8fafc;">
+                    <td colspan="4" style="padding: 1rem;">
+                        <div class="printable-area" id="print-mov-${index}" style="padding: 1.5rem; background: #fff; border: 1px solid #cbd5e1; border-radius: 4px;">
+                            <div class="print-header-format" style="display: block;">
+                                <div class="print-header-top">
+                                    <div class="print-company-info">
+                                        <h2>SISTEMA INTEGRADO DE ALMACÉN</h2>
+                                        <p>COMPROBANTE OFICIAL DE MOVIMIENTO Y TRAZABILIDAD</p>
+                                    </div>
+                                    <div class="print-doc-box">
+                                        <h3>${h.tipo.toUpperCase()}</h3>
+                                        <p>Fecha: ${h.fecha}</p>
+                                    </div>
+                                </div>
+                                <div class="print-meta-grid">
+                                    <div><strong>Destino / Proveedor:</strong> ${h.destino}</div>
+                                    <div><strong>Estado:</strong> Consolidado y Aprobado</div>
+                                </div>
+                            </div>
+                            <h4 style="margin-top: 1rem; color: var(--primary);">Desglose de Ítems del Movimiento:</h4>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead><tr><th>Descripción / Ítem</th><th>Cantidad</th></tr></thead>
+                                    <tbody>
+                                        ${h.items.map(i => `<tr><td>${i.nombre || i.codigo}</td><td><strong>${i.cantidad}</strong></td></tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="print-signatures-box" style="display: flex;">
+                                <div class="signature-line">Firma Autorizada / Almacén</div>
+                                <div class="signature-line">Firma de Recibido Conforme</div>
+                            </div>
+                            <div style="margin-top: 1.5rem; text-align: right;" class="no-print">
+                                <button class="btn btn-secondary" onclick="event.stopPropagation(); imprimirMovimiento(${index})">🖨️ Imprimir Planilla Oficial Completa</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function toggleDetalle(index) {
+        const fila = document.getElementById(`detalle-${index}`);
+        fila.style.display = fila.style.display === 'none' ? 'table-row' : 'none';
+    }
+
+    function imprimirMovimiento(index) {
+        const el = document.getElementById(`print-mov-${index}`);
+        el.classList.add('printable-area');
+        window.print();
+    }
+
+    function limpiarHistorial() {
+        historialSalidas = [];
+        renderHistorial();
+    }
+
+    /* USUARIOS */
+    function registrarNuevoUsuario() {
+        const user = document.getElementById('nuevo-user').value.trim();
+        const nombre = document.getElementById('nuevo-nombre-completo').value.trim();
+        const pass = document.getElementById('nuevo-pass').value.trim();
+
+        if(!user || !nombre || !pass) return alert('Complete todos los campos de usuario.');
+        if(usuarios.some(u => u.user === user)) return alert('El nombre de usuario ya está registrado.');
+
+        usuarios.push({ user, nombre, pass });
+        alert('Usuario creado exitosamente.');
+        document.getElementById('nuevo-user').value = '';
+        document.getElementById('nuevo-nombre-completo').value = '';
+        document.getElementById('nuevo-pass').value = '';
+        renderUsuarios();
+    }
+
+    function renderUsuarios() {
+        const tbody = document.getElementById('tbody-usuarios');
+        tbody.innerHTML = '';
+        usuarios.forEach((u, index) => {
+            tbody.innerHTML += `<tr><td><strong>${u.user}</strong></td><td>${u.nombre}</td><td><span class="badge badge-success">Activo</span></td><td>${index > 0 ? `<button class="btn btn-danger" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="usuarios.splice(${index},1); renderUsuarios();">Eliminar</button>` : 'Sistema'}</td></tr>`;
+        });
+    }
+</script>
+
+</body>
+</html>
