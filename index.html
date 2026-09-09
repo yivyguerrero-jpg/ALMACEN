@@ -1,877 +1,2096 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema ERP - Control de Almacén y Logística</title>
+    <title>ALMACÉN VOLCAN GOLD - Control Integral de Almacén</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #1e3a8a;
-            --primary-dark: #0f172a;
-            --secondary: #0f766e;
-            --danger: #dc2626;
-            --warning: #d97706;
-            --success: #16a34a;
-            --sidebar-bg: #0b1329;
+            --sidebar-bg: #111827;
+            --sidebar-text: #9ca3af;
+            --sidebar-active: #1f2937;
+            --sidebar-active-border: #3b82f6;
+            --main-bg: #f3f4f6;
             --card-bg: #ffffff;
-            --text-dark: #1e293b;
-            --text-muted: #64748b;
-            --border: #cbd5e1;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --primary-color: #0f172a;
+            --accent-color: #d97706;
+            --accent-hover: #b45309;
+            --border-color: #e5e7eb;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background-color: #f1f5f9; color: var(--text-dark); display: flex; height: 100vh; overflow: hidden; }
-
-        /* PANTALLA DE LOGIN */
-        #login-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: var(--sidebar-bg); z-index: 9999; display: flex;
-            align-items: center; justify-content: center;
-        }
-        .login-card {
-            background: var(--card-bg); padding: 2.5rem; border-radius: 8px;
-            width: 100%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
-            border-top: 5px solid #38bdf8;
-        }
-        .login-card h2 { color: var(--primary); margin-bottom: 1.5rem; text-align: center; font-size: 1.5rem; }
-
-        /* BARRA LATERAL ESTILO ERP */
-        aside {
-            width: 270px; background-color: var(--sidebar-bg); color: #ffffff;
-            display: flex; flex-direction: column; justify-content: space-between;
-            height: 100vh; border-right: 1px solid #1e293b; flex-shrink: 0; z-index: 100;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
         }
 
-        .sidebar-brand { padding: 1.25rem 1.5rem; border-bottom: 1px solid #1e293b; background: #070d1b; }
-        .sidebar-brand h2 { font-size: 1.1rem; color: #38bdf8; font-weight: 700; letter-spacing: 0.5px; }
-        .sidebar-nav { flex: 1; overflow-y: auto; padding: 0.5rem 0; }
-
-        .nav-item {
-            display: flex; align-items: center; padding: 0.75rem 1.5rem; color: #94a3b8; text-decoration: none;
-            font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent;
-            background: transparent; width: 100%; border: none; text-align: left;
+        body {
+            background-color: var(--main-bg);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
         }
-        .nav-item:hover { color: #ffffff; background: rgba(255, 255, 255, 0.04); }
-        .nav-item.active { color: #ffffff; background: rgba(56, 189, 248, 0.1); border-left-color: #38bdf8; }
-        .nav-item .nav-icon { font-size: 1rem; min-width: 28px; text-align: center; }
 
-        .sidebar-footer { padding: 0.75rem 1rem; border-top: 1px solid #1e293b; background: #060a14; display: flex; align-items: center; justify-content: space-between; }
-        .user-footer-box { display: flex; align-items: center; gap: 0.75rem; }
-        .user-avatar { width: 34px; height: 34px; background: #2563eb; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 0.9rem; }
-        .user-info h4 { font-size: 0.8rem; color: #f8fafc; }
-        .user-info p { font-size: 0.65rem; color: #38bdf8; font-weight: 600; }
-        .btn-logout { background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 1.1rem; }
-        .btn-logout:hover { color: var(--danger); }
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
 
-        /* CONTENEDOR PRINCIPAL */
-        .main-wrapper { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        header { background: var(--primary-dark); color: white; padding: 0.85rem 2rem; flex-shrink: 0; border-bottom: 3px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
-        header h1 { font-size: 1.2rem; font-weight: 600; }
-        header p { font-size: 0.75rem; opacity: 0.7; }
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #1f2937;
+        }
 
-        .container { padding: 1.5rem; max-width: 1450px; margin: 0 auto; width: 100%; flex: 1; overflow-y: auto; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .sidebar-header h1 {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
 
-        .card { background: var(--card-bg); border-radius: 6px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary); border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header p {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
 
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
-        .form-group { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.75rem; }
-        .form-group label { font-size: 0.8rem; font-weight: 700; color: var(--text-dark); text-transform: uppercase; }
-        .form-group input, .form-group select { padding: 0.55rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; outline: none; background: #fff; }
-        .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(30,58,138,0.1); }
+        .sidebar-menu {
+            padding: 16px 12px;
+            flex: 1;
+            overflow-y: auto;
+        }
 
-        .btn { padding: 0.55rem 1.1rem; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-secondary { background: var(--secondary); color: white; }
-        .btn-secondary:hover { background: #0d9488; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-success { background: var(--success); color: white; }
+        .menu-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #4b5563;
+            margin: 16px 8px 8px 8px;
+            letter-spacing: 1px;
+        }
 
-        .table-responsive { overflow-x: auto; margin-top: 0.75rem; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
-        th { background: #e2e8f0; color: var(--text-dark); font-weight: 700; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e1; }
-        td { padding: 0.6rem 0.75rem; border: 1px solid #cbd5e1; }
-        .badge { padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.7rem; font-weight: 700; display: inline-block; text-transform: uppercase; }
-        .badge-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-        .badge-warning { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
-        /* DISEÑO DE PLANILLAS Y FORMATOS CORPORATIVOS PARA IMPRESIÓN */
-        .print-header-format { display: none; margin-bottom: 1.5rem; border-bottom: 2px solid #000; padding-bottom: 1rem; }
-        .print-header-top { display: flex; justify-content: space-between; align-items: flex-start; }
-        .print-company-info h2 { font-size: 1.3rem; font-weight: bold; color: #000; }
-        .print-company-info p { font-size: 0.8rem; color: #333; }
-        .print-doc-box { border: 2px solid #000; padding: 0.5rem 1rem; text-align: center; border-radius: 4px; }
-        .print-doc-box h3 { font-size: 1rem; font-weight: bold; }
-        .print-doc-box p { font-size: 0.8rem; }
+        .menu-item:hover {
+            background-color: #1f2937;
+            color: #ffffff;
+        }
 
-        .print-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem; font-size: 0.85rem; background: #f8fafc; padding: 0.5rem; border: 1px solid #94a3b8; }
+        .menu-item.active {
+            background-color: #1e293b;
+            color: #ffffff;
+            border-left: 3px solid #38bdf8;
+        }
 
-        .print-signatures-box { display: none; margin-top: 3.5rem; justify-content: space-between; }
-        .signature-line { width: 45%; border-top: 1px solid #000; text-align: center; padding-top: 0.4rem; font-size: 0.8rem; font-weight: bold; }
+        .menu-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        /* Main Content Container */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Header */
+        .top-header {
+            height: 60px;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+        }
+
+        .breadcrumb {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background-color: #d97706;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .btn-logout {
+            background-color: #f3f4f6;
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+
+        .btn-logout:hover {
+            background-color: #e5e7eb;
+        }
+
+        /* Content Area */
+        .content-body {
+            flex: 1;
+            padding: 28px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Stat Cards Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: rgba(217, 119, 6, 0.05);
+            border-radius: 0 0 0 100%;
+        }
+
+        .stat-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 8px 0 4px 0;
+        }
+
+        .stat-desc {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* Card Section */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* Forms Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input, select, textarea {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1e293b;
+        }
+
+        .btn-accent {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+
+        .btn-danger {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background-color: #fca5a5;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-success { background: #dcfce7; color: #15803d; }
+        .badge-warning { background: #fef3c7; color: #b45309; }
+        .badge-danger { background: #fee2e2; color: #b91c1c; }
+        .badge-info { background: #e0f2fe; color: #0369a1; }
+
+        /* Multi-product items in forms */
+        .product-line-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 2fr 40px;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 10px;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        /* Printable Sheet Layouts (Hidden in Web, styled for print/modal) */
+        .voucher-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .voucher-content {
+            background: white;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .printable-area {
+            border: 2px solid #000;
+            padding: 30px;
+            background: #fff;
+            color: #000;
+        }
+
+        .voucher-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .voucher-title {
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .voucher-meta {
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .voucher-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .voucher-table th, .voucher-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .signature-box {
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            text-align: center;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        /* Config cards grid */
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
 
         @media print {
             body * { visibility: hidden; }
-            .printable-area, .printable-area * { visibility: visible; }
-            .printable-area { 
-                position: absolute; left: 0; top: 0; width: 100%; background: white !important; padding: 1.5rem !important; 
-                box-shadow: none !important; border: none !important;
-            }
+            .voucher-content, .voucher-content * { visibility: visible; }
+            .voucher-content { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; padding: 0; box-shadow: none; }
             .no-print { display: none !important; }
-            .print-header-format { display: block !important; }
-            .print-signatures-box { display: flex !important; }
-            table { border-color: #000 !important; }
-            th, td { border-color: #000 !important; color: #000 !important; }
         }
     </style>
 </head>
 <body>
 
-<!-- PANTALLA DE ACCESO -->
-<div id="login-overlay">
-    <div class="login-card">
-        <h2>🔒 ERP LOGÍSTICA & ALMACÉN</h2>
-        <div class="form-group">
-            <label>Usuario</label>
-            <input type="text" id="login-user" placeholder="Ej: yivy">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>ALMACÉN PRO</h1>
+            <p>Control integral de almacén</p>
         </div>
-        <div class="form-group">
-            <label>Contraseña</label>
-            <input type="password" id="login-pass" placeholder="********">
-        </div>
-        <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="intentarLogin()">Iniciar Sesión ERP</button>
-        <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 1rem;">Default: yivy / 1234</p>
-    </div>
-</div>
+        <nav class="sidebar-menu">
+            <div class="menu-section-title">PRINCIPAL</div>
+            <a class="menu-item active" onclick="showTab('dashboard')">
+                <i class="fa-solid fa-house"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="menu-item" onclick="showTab('inventario')">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                <span>Inventario general</span>
+            </a>
 
-<aside id="app-sidebar" style="display:none;">
-    <div>
-        <div class="sidebar-brand">
-            <h2>📦 ERP ALMACÉN PRO</h2>
-        </div>
-        <div class="sidebar-nav">
-            <button class="nav-item active" onclick="switchTab('inventario')"><span class="nav-icon">📊</span><span>Inventario General</span></button>
-            <button class="nav-item" onclick="switchTab('registrar-prod')"><span class="nav-icon">🏷️</span><span>Registrar Producto</span></button>
-            <button class="nav-item" onclick="switchTab('ingresos')"><span class="nav-icon">📥</span><span>Entradas / Compras</span></button>
-            <button class="nav-item" onclick="switchTab('mostrador')"><span class="nav-icon">🛒</span><span>Salidas Mostrador</span></button>
-            <button class="nav-item" onclick="switchTab('salidas-area')"><span class="nav-icon">🏢</span><span>Salidas por Área</span></button>
-            <button class="nav-item" onclick="switchTab('logistica')"><span class="nav-icon">🚚</span><span>Envíos Transportadora</span></button>
-            <button class="nav-item" onclick="switchTab('areas')"><span class="nav-icon">👔</span><span>Áreas y Jefaturas</span></button>
-            <button class="nav-item" onclick="switchTab('historial')"><span class="nav-icon">📜</span><span>Historial y Trazabilidad</span></button>
-            <button class="nav-item" onclick="switchTab('usuarios')"><span class="nav-icon">🔑</span><span>Gestión de Usuarios</span></button>
-        </div>
-    </div>
-    <div class="sidebar-footer">
-        <div class="user-footer-box">
-            <div class="user-avatar" id="sidebar-avatar">Y</div>
-            <div class="user-info">
-                <h4 id="sidebar-username">YIVY GUERRERO</h4>
-                <p>Sesión Activa</p>
+            <div class="menu-section-title">MOVIMIENTOS</div>
+            <a class="menu-item" onclick="showTab('entradas')">
+                <i class="fa-solid fa-arrow-down"></i>
+                <span>Entradas a almacén</span>
+            </a>
+            <a class="menu-item" onclick="showTab('salidas')">
+                <i class="fa-solid fa-arrow-up"></i>
+                <span>Salidas de almacén</span>
+            </a>
+            <a class="menu-item" onclick="showTab('salidas-area')">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Salidas por área</span>
+            </a>
+            <a class="menu-item" onclick="showTab('envios-sede')">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span>Envíos sede operativa</span>
+            </a>
+            <a class="menu-item" onclick="showTab('combustible')">
+                <i class="fa-solid fa-gas-pump"></i>
+                <span>Inventario combustible</span>
+            </a>
+
+            <div class="menu-section-title">ADMINISTRACIÓN</div>
+            <a class="menu-item" onclick="showTab('configuracion')">
+                <i class="fa-solid fa-gear"></i>
+                <span>Configuración</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="breadcrumb" id="breadcrumb-text">Almacén / Dashboard</div>
+            <div class="user-profile">
+                <span class="user-name" id="currentUserDisplay">admin</span>
+                <div class="user-avatar" id="currentUserAvatar">A</div>
+                <button class="btn-logout" onclick="logout()">Salir</button>
             </div>
-        </div>
-        <button class="btn-logout" onclick="cerrarSesion()" title="Cerrar Sesión">🚪</button>
-    </div>
-</aside>
+        </header>
 
-<div class="main-wrapper" id="app-main-wrapper" style="display:none;">
-    <header>
-        <div>
-            <h1>Módulo de Gestión Logística e Inventarios</h1>
-            <p>Control automatizado tipo ERP - Trazabilidad y Planillas Oficiales</p>
-        </div>
-        <div id="header-clock" style="font-size: 0.8rem; font-weight: bold; background: rgba(255,255,255,0.1); padding: 0.3rem 0.8rem; border-radius: 4px;"></div>
-    </header>
+        <!-- Content Body -->
+        <div class="content-body">
 
-    <main class="container">
-
-        <!-- 1. INVENTARIO -->
-        <section id="tab-inventario" class="tab-content active">
-            <div class="card printable-area">
-                <div class="print-header-format">
-                    <div class="print-header-top">
-                        <div class="print-company-info">
-                            <h2>SISTEMA INTEGRADO DE ALMACÉN</h2>
-                            <p>NIT: 900.823.112-5 | Control General de Stock</p>
-                        </div>
-                        <div class="print-doc-box">
-                            <h3>REPORTE DE INVENTARIO</h3>
-                            <p>Fecha: <span class="fecha-print-val"></span></p>
-                        </div>
+            <!-- TAB 1: DASHBOARD -->
+            <div id="tab-dashboard" class="tab-content">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">Dashboard</h2>
+                        <p class="page-subtitle">Resumen operativo del almacén</p>
                     </div>
                 </div>
-                <div class="card-title">
-                    <span>Catálogo Actual de Inventario</span>
-                    <button class="btn btn-secondary no-print" onclick="window.print()">🖨️ Imprimir Inventario Completo</button>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">PRODUCTOS</div>
+                        <div class="stat-value" id="dash-prod-count">0</div>
+                        <div class="stat-desc">Referencias registradas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">EXISTENCIAS</div>
+                        <div class="stat-value" id="dash-stock-count">0</div>
+                        <div class="stat-desc">Unidades disponibles</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">BAJO MÍNIMO</div>
+                        <div class="stat-value" id="dash-low-stock">0</div>
+                        <div class="stat-desc">Requieren reposición</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">TIMBOS ACPM</div>
+                        <div class="stat-value" id="dash-timbos-count">0</div>
+                        <div class="stat-desc">Stock real disponible</div>
+                    </div>
                 </div>
-                <div class="table-responsive">
-                    <table>
-                        <thead><tr><th>Código</th><th>Descripción Producto</th><th>Clasificación</th><th>Tipo Específico</th><th>Stock Actual</th><th>Stock Mínimo</th></tr></thead>
-                        <tbody id="tbody-inventario"></tbody>
-                    </table>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Últimos movimientos</h3>
+                        <button class="btn btn-secondary" onclick="showTab('inventario')">Ver inventario</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Documento / Requisición</th>
+                                    <th>Detalle</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-recent-movements">
+                                <tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No hay movimientos todavía.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </section>
 
-        <!-- 2. REGISTRAR PRODUCTO -->
-        <section id="tab-registrar-prod" class="tab-content">
-            <div class="card">
-                <div class="card-title"><span>Formato de Alta de Nuevo Producto</span></div>
-                <div class="form-grid">
-                    <div class="form-group"><label>Código de Producto</label><input type="text" id="reg-prod-codigo" placeholder="Ej: INS-005"></div>
-                    <div class="form-group"><label>Nombre del Producto</label><input type="text" id="reg-prod-nombre" placeholder="Nombre descriptivo oficial"></div>
-                    <div class="form-group">
-                        <label>Clasificación General</label>
-                        <select id="reg-prod-clase">
-                            <option value="Insumo">Insumo</option>
-                            <option value="Herramienta">Herramienta</option>
-                            <option value="Equipo">Equipo</option>
-                            <option value="EPP">EPP (Protección Personal)</option>
+            <!-- TAB 2: INVENTARIO GENERAL -->
+            <div id="tab-inventario" class="tab-content" style="display:none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">Inventario general</h2>
+                        <p class="page-subtitle">Control de existencias, ubicaciones y niveles mínimos</p>
+                    </div>
+                    <button class="btn btn-accent" onclick="openProductModal()"><i class="fa-solid fa-plus"></i> + Nuevo producto</button>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">REFERENCIAS</div>
+                        <div class="stat-value" id="inv-stat-ref">0</div>
+                        <div class="stat-desc">Productos registrados</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">EXISTENCIAS</div>
+                        <div class="stat-value" id="inv-stat-stock">0</div>
+                        <div class="stat-desc">Unidades disponibles</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">BAJO MÍNIMO</div>
+                        <div class="stat-value" id="inv-stat-low">0</div>
+                        <div class="stat-desc">Requieren reposición</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">CATEGORÍAS</div>
+                        <div class="stat-value" id="inv-stat-cat">0</div>
+                        <div class="stat-desc">Clasificaciones activas</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr; margin-bottom: 16px;">
+                        <input type="text" id="inv-search" placeholder="🔍 Buscar por código o descripción" oninput="renderInventory()">
+                        <select id="inv-cat-filter" onchange="renderInventory()">
+                            <option value="">Todas las categorías</option>
                         </select>
+                        <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir / PDF</button>
                     </div>
-                    <div class="form-group"><label>Tipo de Producto</label><input type="text" id="reg-prod-tipo" placeholder="Ej: Eléctrico, Mecánico, Químico"></div>
-                    <div class="form-group"><label>Stock Inicial</label><input type="number" id="reg-prod-stock" min="0" value="0"></div>
-                    <div class="form-group"><label>Stock Mínimo Alerta</label><input type="number" id="reg-prod-min" min="0" value="5"></div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Código / Producto</th>
+                                    <th>Unidad</th>
+                                    <th>Categoría</th>
+                                    <th>Ubicación</th>
+                                    <th>Existencias</th>
+                                    <th>Mínimo</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table-body">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <button class="btn btn-primary" onclick="guardarNuevoProducto()">💾 Registrar Producto en Base de Datos</button>
             </div>
-        </section>
 
-        <!-- 3. INGRESOS / COMPRAS -->
-        <section id="tab-ingresos" class="tab-content">
-            <div class="card">
-                <div class="card-title"><span>Registro de Entrada de Mercancía (Compras / Proveedores)</span></div>
-                <div class="form-grid">
-                    <div class="form-group"><label>Seleccionar Producto</label><select id="ingreso-prod-select"></select></div>
-                    <div class="form-group"><label>Cantidad a Recibir</label><input type="number" id="ingreso-cant-input" min="1" value="1"></div>
-                    <div class="form-group"><label>Proveedor / Origen</label><input type="text" id="ingreso-proveedor" placeholder="Ej: Comercializadora Minera S.A."></div>
+            <!-- TAB 3: ENTRADAS A ALMACÉN -->
+            <div id="tab-entradas" class="tab-content" style="display:none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">Entradas a almacén</h2>
+                        <p class="page-subtitle">Recepción de mercancía y actualización automática de existencias</p>
+                    </div>
                 </div>
-                <button class="btn btn-secondary" onclick="agregarItemCarritoIngreso()">➕ Agregar Ítem al Documento</button>
 
-                <div class="table-responsive" style="margin-top: 1rem;">
-                    <h4>Detalle de Ítems a Ingresar:</h4>
-                    <table>
-                        <thead><tr><th>Código</th><th>Producto</th><th>Cantidad</th><th>Acción</th></tr></thead>
-                        <tbody id="tbody-carrito-ingreso"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr></tbody>
-                    </table>
-                </div>
-                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="finalizarIngresoMercancia()">✅ Procesar Ingreso y Actualizar Stock</button>
-            </div>
-        </section>
-
-        <!-- 4. SALIDAS MOSTRADOR -->
-        <section id="tab-mostrador" class="tab-content">
-            <div class="card">
-                <div class="card-title"><span>Salida Diaria por Mostrador / Ventas</span></div>
-                <div class="form-grid">
-                    <div class="form-group"><label>Nombre del Cliente / Receptor</label><input type="text" id="mostrador-cliente" placeholder="Nombre completo"></div>
-                    <div class="form-group"><label>Seleccionar Producto</label><select id="mostrador-prod-select"></select></div>
-                    <div class="form-group"><label>Cantidad</label><input type="number" id="mostrador-cant-input" min="1" value="1"></div>
-                </div>
-                <button class="btn btn-secondary" onclick="agregarItemCarritoMostrador()">➕ Agregar Ítem al Comprobante</button>
-
-                <div class="table-responsive" style="margin-top: 1rem;">
-                    <h4>Ítems del Despacho de Mostrador:</h4>
-                    <table>
-                        <thead><tr><th>Código</th><th>Producto</th><th>Cantidad</th><th>Acción</th></tr></thead>
-                        <tbody id="tbody-carrito-mostrador"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr></tbody>
-                    </table>
-                </div>
-                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="finalizarSalidaMostrador()">✅ Registrar y Generar Salida</button>
-            </div>
-        </section>
-
-        <!-- 5. SALIDAS POR ÁREA -->
-        <section id="tab-salidas-area" class="tab-content">
-            <div class="card printable-area">
-                <div class="print-header-format">
-                    <div class="print-header-top">
-                        <div class="print-company-info">
-                            <h2>SISTEMA INTEGRADO DE ALMACÉN Y LOGÍSTICA</h2>
-                            <p>COMPROBANTE OFICIAL DE DESPACHO INTERNO</p>
+                <div class="card">
+                    <h3 class="card-title" style="margin-bottom:16px;">Registrar Entrada</h3>
+                    <form id="form-entrada" onsubmit="saveEntrada(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Fecha</label>
+                                <input type="date" id="ent-fecha" required>
+                            </div>
+                            <div class="form-group">
+                                <label>N.° requisición / Factura</label>
+                                <input type="text" id="ent-requisicion" placeholder="REQ-001" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Quién lo trajo / Proveedor</label>
+                                <input type="text" id="ent-quientrajo" placeholder="Nombre de quien entrega" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Observación general</label>
+                                <input type="text" id="ent-obs" placeholder="Notas sobre la entrega">
+                            </div>
                         </div>
-                        <div class="print-doc-box">
-                            <h3>PLANILLA DE SALIDA POR ÁREA</h3>
-                            <p>Fecha: <span class="fecha-print-val"></span></p>
+
+                        <h4 style="margin: 16px 0 10px 0; font-size:14px;">Detalle de productos</h4>
+                        <div id="entrada-products-list"></div>
+                        
+                        <button type="button" class="btn btn-secondary" onclick="addEntradaProductRow()" style="margin-bottom: 20px;">
+                            + Agregar producto
+                        </button>
+
+                        <div>
+                            <button type="submit" class="btn btn-primary">Guardar entrada</button>
                         </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Historial de entradas</h3>
+                        <input type="text" id="filter-entradas" placeholder="🔍 Filtrar entradas..." oninput="renderEntradasHistory()" style="width:250px;">
                     </div>
-                    <div class="print-meta-grid" id="print-area-meta">
-                        <div><strong>Área Solicitante:</strong> <span id="lbl-print-area">---</span></div>
-                        <div><strong>Jefe Responsable:</strong> <span id="lbl-print-jefe">---</span></div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Requisición</th>
+                                    <th>Quién Trajo</th>
+                                    <th>Productos CARGADOS</th>
+                                    <th>Observaciones</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="entradas-history-body"></tbody>
+                        </table>
                     </div>
-                </div>
-
-                <div class="card-title">
-                    <span>Planilla de Despacho por Área y Consumo Interno</span>
-                    <button class="btn btn-success no-print" onclick="window.print()">🖨️ Imprimir Planilla Oficial</button>
-                </div>
-                <div class="form-grid no-print">
-                    <div class="form-group"><label>Área Solicitante</label><select id="area-sel" onchange="actualizarInfoAreaPrint()"></select></div>
-                    <div class="form-group"><label>Producto</label><select id="area-prod-select"></select></div>
-                    <div class="form-group"><label>Cantidad</label><input type="number" id="area-cant-input" min="1" value="1"></div>
-                </div>
-                <button class="btn btn-secondary no-print" onclick="agregarItemCarritoArea()">➕ Agregar Ítem a la Planilla</button>
-
-                <div class="table-responsive" style="margin-top: 1rem;">
-                    <h4>Ítems Solicitados:</h4>
-                    <table>
-                        <thead><tr><th>Código</th><th>Descripción del Producto</th><th>Clasificación</th><th>Cantidad Entregada</th></tr></thead>
-                        <tbody id="tbody-carrito-area"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr></tbody>
-                    </table>
-                </div>
-
-                <div class="print-signatures-box">
-                    <div class="signature-line">Firma Responsable Área Solicitante</div>
-                    <div class="signature-line">Firma Encargado de Almacén</div>
-                </div>
-
-                <div style="margin-top: 1.5rem;" class="no-print">
-                    <button class="btn btn-primary" onclick="finalizarSalidaArea()">✅ Autorizar y Registrar Salida por Área</button>
                 </div>
             </div>
-        </section>
 
-        <!-- 6. ENVÍOS TRANSPORTADORA -->
-        <section id="tab-logistica" class="tab-content">
-            <div class="card printable-area">
-                <div class="print-header-format">
-                    <div class="print-header-top">
-                        <div class="print-company-info">
-                            <h2>SISTEMA INTEGRADO DE ALMACÉN</h2>
-                            <p>GUÍA OFICIAL DE TRANSPORTE Y LOGÍSTICA</p>
+            <!-- TAB 4: SALIDAS DE ALMACÉN -->
+            <div id="tab-salidas" class="tab-content" style="display:none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">Salidas diarias de almacén</h2>
+                        <p class="page-subtitle">Documento de salida con consecutivo y control de stock</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title" style="margin-bottom:16px;">Registrar Salida General</h3>
+                    <form id="form-salida" onsubmit="saveSalida(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Fecha</label>
+                                <input type="date" id="sal-fecha" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Quién pidió</label>
+                                <input type="text" id="sal-pidio" placeholder="Nombre del solicitante" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Área destino</label>
+                                <select id="sal-area" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Quién entregó (Almacenista)</label>
+                                <input type="text" id="sal-entrego" placeholder="Nombre almacenista" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Observaciones</label>
+                                <textarea id="sal-obs" rows="2"></textarea>
+                            </div>
                         </div>
-                        <div class="print-doc-box">
-                            <h3>PLANILLA DE ENVÍO</h3>
-                            <p>Fecha: <span class="fecha-print-val"></span></p>
+
+                        <h4 style="margin: 16px 0 10px 0; font-size:14px;">Detalle de productos</h4>
+                        <div id="salida-products-list"></div>
+                        <button type="button" class="btn btn-secondary" onclick="addSalidaProductRow()" style="margin-bottom: 20px;">+ Agregar producto</button>
+
+                        <div>
+                            <button type="submit" class="btn btn-primary">Registrar salida</button>
                         </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title" style="margin-bottom:16px;">Documentos de salida</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Consecutivo</th>
+                                    <th>Fecha</th>
+                                    <th>Solicitante</th>
+                                    <th>Área</th>
+                                    <th>Productos</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salidas-history-body"></tbody>
+                        </table>
                     </div>
-                    <div class="print-meta-grid" id="print-trans-meta">
-                        <div><strong>Transportadora:</strong> <span id="lbl-print-emp">---</span></div>
-                        <div><strong>Conductor / Placa:</strong> <span id="lbl-print-cond">---</span></div>
+                </div>
+            </div>
+
+            <!-- TAB 5: SALIDAS POR ÁREA (CON IMPRESIÓN Y FIRMA) -->
+            <div id="tab-salidas-area" class="tab-content" style="display:none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">Salidas por área</h2>
+                        <p class="page-subtitle">Entrega interna con comprobante consecutivo para firma</p>
                     </div>
                 </div>
 
-                <div class="card-title">
-                    <span>Control de Envíos por Transportadora (Despachos al Pueblo)</span>
-                    <button class="btn btn-success no-print" onclick="window.print()">🖨️ Imprimir Guía de Envío</button>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group"><label>Empresa Transportadora</label><input type="text" id="trans-emp" placeholder="Ej: Servientrega / Carga" oninput="actualizarInfoTransPrint()"></div>
-                    <div class="form-group"><label>Nombre del Conductor</label><input type="text" id="trans-cond" placeholder="Nombre completo" oninput="actualizarInfoTransPrint()"></div>
-                    <div class="form-group"><label>Placa del Vehículo</label><input type="text" id="trans-placa" placeholder="ABC-123"></div>
-                    <div class="form-group"><label>Destino / Número de Guía</label><input type="text" id="trans-guia" placeholder="Pueblo / Guía #"></div>
+                <div class="card">
+                    <form id="form-salida-area" onsubmit="saveSalidaArea(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Fecha</label>
+                                <input type="date" id="sa-fecha" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Área</label>
+                                <select id="sa-area" required onchange="updateAreaBoss()"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Responsable del área (Recibe)</label>
+                                <input type="text" id="sa-responsable" required placeholder="Jefe o Encargado de área">
+                            </div>
+                            <div class="form-group">
+                                <label>Almacenista (Entrega)</label>
+                                <input type="text" id="sa-almacenista" required placeholder="Nombre de almacén">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Observación</label>
+                                <input type="text" id="sa-obs">
+                            </div>
+                        </div>
+
+                        <h4 style="margin: 16px 0 10px 0; font-size:14px;">Productos entregados</h4>
+                        <div id="sa-products-list"></div>
+                        <button type="button" class="btn btn-secondary" onclick="addSAProductRow()" style="margin-bottom: 20px;">+ Agregar producto</button>
+
+                        <div>
+                            <button type="submit" class="btn btn-primary">Guardar y Generar Comprobante</button>
+                        </div>
+                    </form>
                 </div>
 
-                <h4 style="margin-top: 1rem; color: var(--primary);" class="no-print">Detalle de Mercancía a Enviar</h4>
-                <div class="form-grid no-print" style="margin-top: 0.5rem;">
-                    <div class="form-group"><label>Descripción del Ítem o Carga</label><input type="text" id="trans-item-desc" placeholder="Descripción libre o caja"></div>
-                    <div class="form-group"><label>Cantidad</label><input type="number" id="trans-item-cant" min="1" value="1"></div>
-                </div>
-                <button class="btn btn-secondary no-print" onclick="agregarItemTransportadora()">➕ Agregar Carga al Envío</button>
-
-                <div class="table-responsive" style="margin-top: 1rem;">
-                    <table>
-                        <thead><tr><th>Descripción de la Carga / Ítem</th><th>Cantidad</th></tr></thead>
-                        <tbody id="tbody-trans-items"><tr><td colspan="2" style="text-align:center; color:var(--text-muted);">Sin carga anexada</td></tr></tbody>
-                    </table>
-                </div>
-
-                <div class="print-signatures-box">
-                    <div class="signature-line">Firma Despachador Logística</div>
-                    <div class="signature-line">Firma Conductor (Recibe Conforme)</div>
-                </div>
-
-                <div style="margin-top: 1.5rem;" class="no-print">
-                    <button class="btn btn-primary" onclick="registrarEnvioTransportadora()">✅ Consolidar y Registrar Envío</button>
+                <div class="card">
+                    <h3 class="card-title" style="margin-bottom:16px;">Historial comprobantes por área</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Consecutivo</th>
+                                    <th>Fecha</th>
+                                    <th>Área</th>
+                                    <th>Responsable Area</th>
+                                    <th>Almacenista</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sa-history-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </section>
 
-        <!-- 7. ÁREAS Y JEFATURAS -->
-        <section id="tab-areas" class="tab-content">
-            <div class="card">
-                <div class="card-title"><span>Administración de Áreas y Jefaturas Autorizadas</span></div>
-                <div class="form-grid">
-                    <div class="form-group"><label>Nombre del Área</label><input type="text" id="in-nombre-area" placeholder="Ej: Operaciones Mineras"></div>
-                    <div class="form-group"><label>Jefe Responsable</label><input type="text" id="in-jefe-area" placeholder="Ej: Ing. Carlos Gómez"></div>
+            <!-- TAB 6: ENVÍOS SEDE OPERATIVA -->
+            <div id="tab-envios-sede" class="tab-content" style="display:none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">Planilla de envío - Sede operativa</h2>
+                        <p class="page-subtitle">Despacho libre de productos con chofer, almacenista y firma</p>
+                    </div>
                 </div>
-                <button class="btn btn-primary" onclick="crearArea()">Registrar Área</button>
-                <div class="table-responsive" style="margin-top: 1rem;">
-                    <table>
-                        <thead><tr><th>Área Organizacional</th><th>Jefe Responsable</th></tr></thead>
-                        <tbody id="tbody-areas"></tbody>
-                    </table>
+
+                <div class="card">
+                    <form id="form-envio-sede" onsubmit="saveEnvioSede(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Fecha de envío</label>
+                                <input type="date" id="es-fecha" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Sede Operativa Destino</label>
+                                <input type="text" id="es-destino" required placeholder="Ej. Mina / Sede Norte">
+                            </div>
+                            <div class="form-group">
+                                <label>Nombre del Chofer / Conductor</label>
+                                <input type="text" id="es-chofer" required placeholder="Nombre completo">
+                            </div>
+                            <div class="form-group">
+                                <label>Placa Vehículo</label>
+                                <input type="text" id="es-placa" required placeholder="ABC-123">
+                            </div>
+                            <div class="form-group">
+                                <label>Almacenista Despachador</label>
+                                <input type="text" id="es-almacenista" required placeholder="Nombre almacenista">
+                            </div>
+                        </div>
+
+                        <h4 style="margin: 16px 0 10px 0; font-size:14px;">Carga de productos (Carga Libre)</h4>
+                        <div id="es-products-list"></div>
+                        <button type="button" class="btn btn-secondary" onclick="addESProductRow()" style="margin-bottom: 20px;">+ Agregar ítem a planilla</button>
+
+                        <div>
+                            <button type="submit" class="btn btn-primary">Generar Planilla de Envío</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title" style="margin-bottom:16px;">Planillas generadas</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Planilla N.°</th>
+                                    <th>Fecha</th>
+                                    <th>Destino</th>
+                                    <th>Chofer</th>
+                                    <th>Placa</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="es-history-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </section>
 
-        <!-- 8. HISTORIAL DE MOVIMIENTOS -->
-        <section id="tab-historial" class="tab-content">
-            <div class="card">
-                <div class="card-title">
-                    <span>Historial de Movimientos y Trazabilidad (Haz clic en cualquier fila para desplegar su planilla detallada e imprimirla)</span>
-                    <button class="btn btn-secondary no-print" onclick="limpiarHistorial()" style="font-size: 0.75rem;">Limpiar Historial</button>
+            <!-- TAB 7: INVENTARIO COMBUSTIBLE -->
+            <div id="tab-combustible" class="tab-content" style="display:none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">Inventario de combustible (Timbos ACPM)</h2>
+                        <p class="page-subtitle">Balance de entradas y salidas de timbos con historial imprimible</p>
+                    </div>
                 </div>
-                <div class="table-responsive">
-                    <table>
-                        <thead><tr><th>Fecha / Hora</th><th>Tipo de Movimiento</th><th>Destino / Proveedor / Detalle</th><th>Total Ítems</th></tr></thead>
-                        <tbody id="tbody-historial"></tbody>
-                    </table>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">TIMBOS LLENOS</div>
+                        <div class="stat-value" id="comb-stock-total">0</div>
+                        <div class="stat-desc">Existencia real</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">TOTAL ENTRADAS</div>
+                        <div class="stat-value" id="comb-in-total">0</div>
+                        <div class="stat-desc">Timbos recibidos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">TOTAL SALIDAS</div>
+                        <div class="stat-value" id="comb-out-total">0</div>
+                        <div class="stat-desc">Timbos entregados</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">MOVIMIENTOS</div>
+                        <div class="stat-value" id="comb-mov-count">0</div>
+                        <div class="stat-desc">Registros realizados</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title" style="margin-bottom:16px;">Registrar movimiento</h3>
+                    <form id="form-combustible" onsubmit="saveCombustible(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Fecha</label>
+                                <input type="date" id="comb-fecha" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Tipo de movimiento</label>
+                                <select id="comb-tipo" required>
+                                    <option value="ENTRADA">ENTRADA (Llegada de timbos)</option>
+                                    <option value="SALIDA">SALIDA (Envío / Consumo)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Cantidad de timbos</label>
+                                <input type="number" id="comb-cantidad" min="1" required placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Conductor / Solicitante</label>
+                                <input type="text" id="comb-persona" required placeholder="Nombre responsable">
+                            </div>
+                            <div class="form-group">
+                                <label>Placa / Vehículo</label>
+                                <input type="text" id="comb-placa" placeholder="Ej: TRK-900">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Observación</label>
+                                <input type="text" id="comb-obs" placeholder="Detalles adicionales">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Registrar movimiento</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Historial de combustible</h3>
+                        <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir historial</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Cantidad (Timbos)</th>
+                                    <th>Responsable</th>
+                                    <th>Placa</th>
+                                    <th>Observación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comb-history-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </section>
 
-        <!-- 9. GESTIÓN DE USUARIOS -->
-        <section id="tab-usuarios" class="tab-content">
-            <div class="card">
-                <div class="card-title"><span>Gestión de Usuarios, Credenciales y Accesos al Sistema</span></div>
-                <div class="form-grid">
-                    <div class="form-group"><label>Nombre de Usuario (Login)</label><input type="text" id="nuevo-user" placeholder="Ej: yivy.guerrero"></div>
-                    <div class="form-group"><label>Nombre Completo</label><input type="text" id="nuevo-nombre-completo" placeholder="Ej: Yivy Guerrero"></div>
-                    <div class="form-group"><label>Contraseña</label><input type="password" id="nuevo-pass" placeholder="********"></div>
+            <!-- TAB 8: CONFIGURACIÓN -->
+            <div id="tab-configuracion" class="tab-content" style="display:none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">Configuración general</h2>
+                        <p class="page-subtitle">Catálogos, áreas, categorías y usuarios</p>
+                    </div>
                 </div>
-                <button class="btn btn-primary" onclick="registrarNuevoUsuario()">➕ Crear Usuario de Acceso</button>
-                <div class="table-responsive" style="margin-top: 1rem;">
-                    <table>
-                        <thead><tr><th>Usuario</th><th>Nombre Completo</th><th>Estado</th><th>Acción</th></tr></thead>
-                        <tbody id="tbody-usuarios"></tbody>
-                    </table>
+
+                <div class="config-grid">
+                    <!-- Áreas y Jefes -->
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom:16px;">Áreas</h3>
+                        <form onsubmit="saveArea(event)" style="margin-bottom: 20px;">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label>Nombre del área</label>
+                                <input type="text" id="cfg-area-name" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label>Jefe de área</label>
+                                <input type="text" id="cfg-area-boss">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Agregar Área</button>
+                        </form>
+                        <ul id="cfg-areas-list" style="list-style:none;"></ul>
+                    </div>
+
+                    <!-- Categorías -->
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom:16px;">Categorías</h3>
+                        <form onsubmit="saveCategory(event)" style="margin-bottom: 20px;">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label>Nombre categoría</label>
+                                <input type="text" id="cfg-cat-name" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Agregar Categoría</button>
+                        </form>
+                        <ul id="cfg-cats-list" style="list-style:none;"></ul>
+                    </div>
+
+                    <!-- Usuarios y Roles (Admin Panel) -->
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom:16px;">Usuarios y roles</h3>
+                        <form onsubmit="saveUser(event)" style="margin-bottom: 20px;">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label>Usuario</label>
+                                <input type="text" id="cfg-user-name" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label>Contraseña</label>
+                                <input type="text" id="cfg-user-pass" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label>Rol</label>
+                                <select id="cfg-user-role">
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Almacenista">Almacenista</option>
+                                    <option value="Consulta">Consulta</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Crear Usuario</button>
+                        </form>
+                        <div id="cfg-users-list"></div>
+                    </div>
                 </div>
             </div>
-        </section>
 
+        </div>
     </main>
-</div>
 
-<script>
-    let usuarios = [
-        { user: "yivy", nombre: "YIVY GUERRERO", pass: "1234" }
-    ];
+    <!-- PRODUCT MODAL -->
+    <div id="product-modal" class="voucher-modal">
+        <div class="voucher-content" style="max-width: 500px;">
+            <h3 style="margin-bottom: 16px;" id="modal-prod-title">Nuevo Producto</h3>
+            <form onsubmit="saveProductModal(event)">
+                <input type="hidden" id="mp-id">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label>Código / Referencia</label>
+                    <input type="text" id="mp-code" required placeholder="REF-001">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label>Descripción del producto</label>
+                    <input type="text" id="mp-desc" required placeholder="Ej. Guantes de Nitrilo">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label>Unidad de medida</label>
+                    <input type="text" id="mp-unit" required placeholder="UN, Par, Caja, Galón">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label>Categoría</label>
+                    <select id="mp-category" required></select>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label>Ubicación en almacén</label>
+                    <input type="text" id="mp-location" placeholder="Estante A-2">
+                </div>
+                <div class="form-grid" style="margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label>Stock inicial</label>
+                        <input type="number" id="mp-stock" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Stock mínimo</label>
+                        <input type="number" id="mp-min" min="0" value="5">
+                    </div>
+                </div>
+                <div style="display:flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    let inventario = [
-        { codigo: "PRD-001", nombre: "Casco de Seguridad Dieléctrico", clase: "EPP", tipo: "Protección Cabeza", stock: 50, min: 10 },
-        { codigo: "PRD-002", nombre: "Guantes de Nitrilo Reforzados (Caja x100)", clase: "Insumo", tipo: "Consumible", stock: 30, min: 15 },
-        { codigo: "PRD-003", nombre: "Botas de Seguridad con Puntera de Acero", clase: "EPP", tipo: "Calzado Industrial", stock: 25, min: 5 }
-    ];
+    <!-- PRINT / VOUCHER MODAL -->
+    <div id="print-modal" class="voucher-modal">
+        <div class="voucher-content">
+            <div class="no-print" style="text-align: right; margin-bottom: 15px;">
+                <button class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir</button>
+                <button class="btn btn-secondary" onclick="closePrintModal()">Cerrar</button>
+            </div>
+            <div class="printable-area" id="printable-voucher-body">
+                <!-- Dynamic voucher content -->
+            </div>
+        </div>
+    </div>
 
-    let areasLista = [
-        { nombre: "Operaciones Mineras", jefe: "Ing. Carlos Gómez" },
-        { nombre: "Mantenimiento General", jefe: "Tec. Mario Ruiz" }
-    ];
+    <script>
+        // DATA STRUCTURE & INITIAL STATE (LocalStorage backend)
+        let db = {
+            products: JSON.parse(localStorage.getItem('db_products')) || [
+                { id: 1, code: 'EPP-001', desc: 'Casco de Seguridad Blanco', unit: 'UN', cat: 'EPP', location: 'A-1', stock: 25, min: 10 },
+                { id: 2, code: 'HER-002', desc: 'Llave de Expansión 12"', unit: 'UN', cat: 'Herramientas', location: 'B-3', stock: 4, min: 5 },
+                { id: 3, code: 'INS-003', desc: 'Aceite Motor 15W40', unit: 'Galón', cat: 'Insumos', location: 'C-1', stock: 12, min: 10 }
+            ],
+            entradas: JSON.parse(localStorage.getItem('db_entradas')) || [],
+            salidas: JSON.parse(localStorage.getItem('db_salidas')) || [],
+            salidasArea: JSON.parse(localStorage.getItem('db_salidasArea')) || [],
+            enviosSede: JSON.parse(localStorage.getItem('db_enviosSede')) || [],
+            combustible: JSON.parse(localStorage.getItem('db_combustible')) || [
+                { id: 1, fecha: '2026-09-01', tipo: 'ENTRADA', cantidad: 20, persona: 'Juan Perez', placa: 'TRK-100', obs: 'Carga inicial' }
+            ],
+            areas: JSON.parse(localStorage.getItem('db_areas')) || [
+                { id: 1, name: 'Mantenimiento', boss: 'Ing. Carlos Ruiz' },
+                { id: 2, name: 'Operaciones', boss: 'Ing. Maria Lopez' },
+                { id: 3, name: 'Administración', boss: 'Laura Gomez' }
+            ],
+            categories: JSON.parse(localStorage.getItem('db_categories')) || ['EPP', 'Herramientas', 'Insumos', 'Repuestos', 'Oficina', 'Aseo'],
+            users: JSON.parse(localStorage.getItem('db_users')) || [
+                { id: 1, name: 'admin', pass: 'admin123', role: 'Administrador', blocked: false }
+            ],
+            currentUser: JSON.parse(localStorage.getItem('db_currentUser')) || { name: 'admin', role: 'Administrador' }
+        };
 
-    let carritoIngreso = [];
-    let carritoMostrador = [];
-    let carritoArea = [];
-    let carritoTransportadora = [];
-    let historialSalidas = [];
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const fechaStr = new Date().toLocaleString();
-        document.querySelectorAll('.fecha-print-val').forEach(el => el.innerText = fechaStr);
-        
-        setInterval(() => {
-            const clock = document.getElementById('header-clock');
-            if(clock) clock.innerText = new Date().toLocaleTimeString();
-        }, 1000);
-    });
-
-    function intentarLogin() {
-        const u = document.getElementById('login-user').value.trim();
-        const p = document.getElementById('login-pass').value.trim();
-        let encontrado = usuarios.find(x => x.user === u && x.pass === p);
-        if(encontrado) {
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('app-sidebar').style.display = 'flex';
-            document.getElementById('app-main-wrapper').style.display = 'flex';
-            document.getElementById('sidebar-username').innerText = encontrado.nombre;
-            document.getElementById('sidebar-avatar').innerText = encontrado.nombre.charAt(0);
-            renderInventario();
-            renderSelects();
-            renderAreas();
-            renderUsuarios();
-            renderHistorial();
-        } else {
-            alert('Usuario o contraseña incorrectos.');
+        function saveDB() {
+            localStorage.setItem('db_products', JSON.stringify(db.products));
+            localStorage.setItem('db_entradas', JSON.stringify(db.entradas));
+            localStorage.setItem('db_salidas', JSON.stringify(db.salidas));
+            localStorage.setItem('db_salidasArea', JSON.stringify(db.salidasArea));
+            localStorage.setItem('db_enviosSede', JSON.stringify(db.enviosSede));
+            localStorage.setItem('db_combustible', JSON.stringify(db.combustible));
+            localStorage.setItem('db_areas', JSON.stringify(db.areas));
+            localStorage.setItem('db_categories', JSON.stringify(db.categories));
+            localStorage.setItem('db_users', JSON.stringify(db.users));
+            localStorage.setItem('db_currentUser', JSON.stringify(db.currentUser));
+            updateDashboardStats();
         }
-    }
 
-    function cerrarSesion() {
-        document.getElementById('login-overlay').style.display = 'flex';
-        document.getElementById('app-sidebar').style.display = 'none';
-        document.getElementById('app-main-wrapper').style.display = 'none';
-        document.getElementById('login-user').value = '';
-        document.getElementById('login-pass').value = '';
-    }
+        // INIT SETUP
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelectorAll('input[type="date"]').forEach(inp => inp.value = today);
 
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        document.getElementById('tab-' + tabId).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(btn => {
-            if(btn.getAttribute('onclick')?.includes(tabId)) btn.classList.add('active');
-        });
-    }
+            document.getElementById('currentUserDisplay').innerText = db.currentUser.name;
+            document.getElementById('currentUserAvatar').innerText = db.currentUser.name.charAt(0).toUpperCase();
 
-    function renderInventario() {
-        const tbody = document.getElementById('tbody-inventario');
-        tbody.innerHTML = '';
-        inventario.forEach(p => {
-            tbody.innerHTML += `<tr><td><strong>${p.codigo}</strong></td><td>${p.nombre}</td><td>${p.clase}</td><td>${p.tipo}</td><td>${p.stock}</td><td>${p.min}</td></tr>`;
-        });
-    }
+            populateDropdowns();
+            renderDashboard();
+            renderInventory();
+            renderEntradasHistory();
+            renderSalidasHistory();
+            renderSAHistory();
+            renderESHistory();
+            renderCombustible();
+            renderConfig();
 
-    function renderSelects() {
-        const si = document.getElementById('ingreso-prod-select');
-        const sm = document.getElementById('mostrador-prod-select');
-        const sa = document.getElementById('area-prod-select');
-        const ar = document.getElementById('area-sel');
-        if(si) si.innerHTML = ''; if(sm) sm.innerHTML = ''; if(sa) sa.innerHTML = ''; if(ar) ar.innerHTML = '';
-
-        inventario.forEach(p => {
-            let opt = `<option value="${p.codigo}">[${p.codigo}] ${p.nombre} (Stock: ${p.stock})</option>`;
-            if(si) si.innerHTML += opt;
-            if(sm) sm.innerHTML += opt;
-            if(sa) sa.innerHTML += opt;
+            // Add initial empty rows to forms
+            addEntradaProductRow();
+            addSalidaProductRow();
+            addSAProductRow();
+            addESProductRow();
         });
 
-        areasLista.forEach(a => {
-            if(ar) ar.innerHTML += `<option value="${a.nombre}">${a.nombre} (Jefe: ${a.jefe})</option>`;
-        });
-        actualizarInfoAreaPrint();
-    }
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabName}`).style.display = 'block';
+            event.currentTarget.classList.add('active');
 
-    function actualizarInfoAreaPrint() {
-        const areaSel = document.getElementById('area-sel').value;
-        let obj = areasLista.find(a => a.nombre === areaSel);
-        if(obj) {
-            document.getElementById('lbl-print-area').innerText = obj.nombre;
-            document.getElementById('lbl-print-jefe').innerText = obj.jefe;
+            const names = {
+                'dashboard': 'Dashboard',
+                'inventario': 'Inventario general',
+                'entradas': 'Entradas a almacén',
+                'salidas': 'Salidas de almacén',
+                'salidas-area': 'Salidas por área',
+                'envios-sede': 'Envíos sede operativa',
+                'combustible': 'Inventario combustible',
+                'configuracion': 'Configuración'
+            };
+            document.getElementById('breadcrumb-text').innerText = `Almacén / ${names[tabName]}`;
         }
-    }
 
-    function actualizarInfoTransPrint() {
-        document.getElementById('lbl-print-emp').innerText = document.getElementById('trans-emp').value || '---';
-        document.getElementById('lbl-print-cond').innerText = (document.getElementById('trans-cond').value + ' (Placa: ' + (document.getElementById('trans-placa').value || '---') + ')') || '---';
-    }
+        function populateDropdowns() {
+            // Categories
+            const catOpts = db.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('inv-cat-filter').innerHTML = `<option value="">Todas las categorías</option>` + catOpts;
+            document.getElementById('mp-category').innerHTML = catOpts;
 
-    function guardarNuevoProducto() {
-        const codigo = document.getElementById('reg-prod-codigo').value.trim();
-        const nombre = document.getElementById('reg-prod-nombre').value.trim();
-        const clase = document.getElementById('reg-prod-clase').value;
-        const tipo = document.getElementById('reg-prod-tipo').value.trim();
-        const stock = parseInt(document.getElementById('reg-prod-stock').value);
-        const min = parseInt(document.getElementById('reg-prod-min').value);
-
-        if(!codigo || !nombre || !tipo) return alert('Complete todos los campos obligatorios.');
-        if(inventario.some(p => p.codigo === codigo)) return alert('Ya existe un producto registrado con este código.');
-
-        inventario.push({ codigo, nombre, clase, tipo, stock, min });
-        alert('Producto dado de alta exitosamente.');
-        document.getElementById('reg-prod-codigo').value = '';
-        document.getElementById('reg-prod-nombre').value = '';
-        document.getElementById('reg-prod-tipo').value = '';
-        renderInventario();
-        renderSelects();
-    }
-
-    /* CARRITO INGRESO */
-    function agregarItemCarritoIngreso() {
-        const cod = document.getElementById('ingreso-prod-select').value;
-        const cant = parseInt(document.getElementById('ingreso-cant-input').value);
-        let prod = inventario.find(p => p.codigo === cod);
-        carritoIngreso.push({ codigo: cod, nombre: prod.nombre, cantidad: cant });
-        renderCarritoIngreso();
-    }
-
-    function renderCarritoIngreso() {
-        const tbody = document.getElementById('tbody-carrito-ingreso');
-        if(carritoIngreso.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr>`;
-            return;
+            // Areas
+            const areaOpts = db.areas.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+            document.getElementById('sal-area').innerHTML = areaOpts;
+            document.getElementById('sa-area').innerHTML = areaOpts;
+            
+            updateAreaBoss();
         }
-        tbody.innerHTML = '';
-        carritoIngreso.forEach((item, index) => {
-            tbody.innerHTML += `<tr><td>${item.codigo}</td><td>${item.nombre}</td><td>${item.cantidad}</td><td><button class="btn btn-danger" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="carritoIngreso.splice(${index},1); renderCarritoIngreso();">Eliminar</button></td></tr>`;
-        });
-    }
 
-    function finalizarIngresoMercancia() {
-        const proveedor = document.getElementById('ingreso-proveedor').value.trim();
-        if(!proveedor || carritoIngreso.length === 0) return alert('Ingrese el proveedor y agregue ítems.');
-
-        carritoIngreso.forEach(item => {
-            let p = inventario.find(x => x.codigo === item.codigo);
-            if(p) p.stock += item.cantidad;
-        });
-
-        historialSalidas.unshift({
-            fecha: new Date().toLocaleString(),
-            tipo: '📥 Ingreso / Compra',
-            destino: `Proveedor: ${proveedor}`,
-            items: [...carritoIngreso]
-        });
-
-        carritoIngreso = [];
-        renderCarritoIngreso();
-        renderInventario();
-        renderSelects();
-        renderHistorial();
-        alert('Ingreso de mercancía registrado correctamente.');
-    }
-
-    /* CARRITO MOSTRADOR */
-    function agregarItemCarritoMostrador() {
-        const cod = document.getElementById('mostrador-prod-select').value;
-        const cant = parseInt(document.getElementById('mostrador-cant-input').value);
-        let prod = inventario.find(p => p.codigo === cod);
-        if(prod.stock < cant) return alert('Stock insuficiente en inventario.');
-        carritoMostrador.push({ codigo: cod, nombre: prod.nombre, cantidad: cant });
-        renderCarritoMostrador();
-    }
-
-    function renderCarritoMostrador() {
-        const tbody = document.getElementById('tbody-carrito-mostrador');
-        if(carritoMostrador.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr>`;
-            return;
+        function updateAreaBoss() {
+            const selectedArea = document.getElementById('sa-area').value;
+            const areaObj = db.areas.find(a => a.name === selectedArea);
+            if (areaObj) {
+                document.getElementById('sa-responsable').value = areaObj.boss || '';
+            }
         }
-        tbody.innerHTML = '';
-        carritoMostrador.forEach((item, index) => {
-            tbody.innerHTML += `<tr><td>${item.codigo}</td><td>${item.nombre}</td><td>${item.cantidad}</td><td><button class="btn btn-danger" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="carritoMostrador.splice(${index},1); renderCarritoMostrador();">Eliminar</button></td></tr>`;
-        });
-    }
 
-    function finalizarSalidaMostrador() {
-        const cliente = document.getElementById('mostrador-cliente').value.trim();
-        if(!cliente || carritoMostrador.length === 0) return alert('Ingrese el cliente y agregue ítems.');
+        // DASHBOARD LOGIC
+        function renderDashboard() {
+            updateDashboardStats();
+            
+            // Recent movements list
+            const movements = [];
+            db.entradas.forEach(e => movements.push({ fecha: e.fecha, tipo: 'ENTRADA', doc: e.requisicion, detail: `${e.items.length} productos (De: ${e.quientrajo})`, user: 'Almacén' }));
+            db.salidas.forEach(s => movements.push({ fecha: s.fecha, tipo: 'SALIDA', doc: `SAL-${s.id}`, detail: `${s.items.length} productos (Para: ${s.pidio})`, user: s.entrego }));
+            db.salidasArea.forEach(sa => movements.push({ fecha: sa.fecha, tipo: 'SALIDA ÁREA', doc: sa.consecutivo, detail: `Área: ${sa.area}`, user: sa.almacenista }));
+            
+            movements.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+            const recent = movements.slice(0, 5);
 
-        carritoMostrador.forEach(item => {
-            let p = inventario.find(x => x.codigo === item.codigo);
-            if(p) p.stock -= item.cantidad;
-        });
-
-        historialSalidas.unshift({
-            fecha: new Date().toLocaleString(),
-            tipo: '🛒 Salida Mostrador',
-            destino: `Cliente: ${cliente}`,
-            items: [...carritoMostrador]
-        });
-
-        carritoMostrador = [];
-        renderCarritoMostrador();
-        renderInventario();
-        renderSelects();
-        renderHistorial();
-        alert('Salida por mostrador registrada con éxito.');
-    }
-
-    /* CARRITO ÁREA */
-    function agregarItemCarritoArea() {
-        const cod = document.getElementById('area-prod-select').value;
-        const cant = parseInt(document.getElementById('area-cant-input').value);
-        let prod = inventario.find(p => p.codigo === cod);
-        if(prod.stock < cant) return alert('Stock insuficiente en inventario.');
-        carritoArea.push({ codigo: cod, nombre: prod.nombre, clase: prod.clase, cantidad: cant });
-        renderCarritoArea();
-    }
-
-    function renderCarritoArea() {
-        const tbody = document.getElementById('tbody-carrito-area');
-        if(carritoArea.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin ítems agregados</td></tr>`;
-            return;
+            const tbody = document.getElementById('dash-recent-movements');
+            if (recent.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No hay movimientos todavía.</td></tr>`;
+            } else {
+                tbody.innerHTML = recent.map(m => `
+                    <tr>
+                        <td>${m.fecha}</td>
+                        <td><span class="badge ${m.tipo.includes('ENTRADA')?'badge-success':'badge-warning'}">${m.tipo}</span></td>
+                        <td><strong>${m.doc}</strong></td>
+                        <td>${m.detail}</td>
+                        <td>${m.user}</td>
+                    </tr>
+                `).join('');
+            }
         }
-        tbody.innerHTML = '';
-        carritoArea.forEach(item => {
-            tbody.innerHTML += `<tr><td><strong>${item.codigo}</strong></td><td>${item.nombre}</td><td>${item.clase}</td><td><strong>${item.cantidad}</strong></td></tr>`;
-        });
-    }
 
-    function finalizarSalidaArea() {
-        const area = document.getElementById('area-sel').value;
-        if(carritoArea.length === 0) return alert('Agregue al menos un ítem al despacho.');
+        function updateDashboardStats() {
+            const totalProds = db.products.length;
+            const totalStock = db.products.reduce((acc, p) => acc + Number(p.stock), 0);
+            const lowStock = db.products.filter(p => Number(p.stock) <= Number(p.min)).length;
 
-        carritoArea.forEach(item => {
-            let p = inventario.find(x => x.codigo === item.codigo);
-            if(p) p.stock -= item.cantidad;
-        });
+            let combStock = 0;
+            db.combustible.forEach(c => {
+                if (c.tipo === 'ENTRADA') combStock += Number(c.cantidad);
+                else combStock -= Number(c.cantidad);
+            });
 
-        historialSalidas.unshift({
-            fecha: new Date().toLocaleString(),
-            tipo: '🏢 Salida por Área',
-            destino: `Área: ${area}`,
-            items: [...carritoArea]
-        });
+            document.getElementById('dash-prod-count').innerText = totalProds;
+            document.getElementById('dash-stock-count').innerText = totalStock;
+            document.getElementById('dash-low-stock').innerText = lowStock;
+            document.getElementById('dash-timbos-count').innerText = combStock;
 
-        carritoArea = [];
-        renderCarritoArea();
-        renderInventario();
-        renderSelects();
-        renderHistorial();
-        alert('Despacho por área autorizado y registrado.');
-    }
+            document.getElementById('inv-stat-ref').innerText = totalProds;
+            document.getElementById('inv-stat-stock').innerText = totalStock;
+            document.getElementById('inv-stat-low').innerText = lowStock;
+            document.getElementById('inv-stat-cat').innerText = db.categories.length;
 
-    /* TRANSPORTADORA */
-    function agregarItemTransportadora() {
-        const desc = document.getElementById('trans-item-desc').value.trim();
-        const cant = parseInt(document.getElementById('trans-item-cant').value);
-        if(!desc) return alert('Ingrese la descripción de la carga.');
-        carritoTransportadora.push({ nombre: desc, cantidad: cant });
-        renderCarritoTransportadora();
-        document.getElementById('trans-item-desc').value = '';
-    }
-
-    function renderCarritoTransportadora() {
-        const tbody = document.getElementById('tbody-trans-items');
-        if(carritoTransportadora.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--text-muted);">Sin carga anexada</td></tr>`;
-            return;
+            document.getElementById('comb-stock-total').innerText = combStock;
         }
-        tbody.innerHTML = '';
-        carritoTransportadora.forEach(item => {
-            tbody.innerHTML += `<tr><td>${item.nombre}</td><td><strong>${item.cantidad}</strong></td></tr>`;
-        });
-    }
 
-    function registrarEnvioTransportadora() {
-        const emp = document.getElementById('trans-emp').value.trim();
-        const cond = document.getElementById('trans-cond').value.trim();
-        const guia = document.getElementById('trans-guia').value.trim();
-        if(!emp || !cond || carritoTransportadora.length === 0) return alert('Complete los datos de la transportadora.');
+        // INVENTORY LOGIC
+        function renderInventory() {
+            const search = document.getElementById('inv-search').value.toLowerCase();
+            const cat = document.getElementById('inv-cat-filter').value;
 
-        historialSalidas.unshift({
-            fecha: new Date().toLocaleString(),
-            tipo: '🚚 Envío Transportadora',
-            destino: `Empresa: ${emp} | Conductor: ${cond} | Guía: ${guia}`,
-            items: [...carritoTransportadora]
-        });
+            const filtered = db.products.filter(p => {
+                const matchSearch = p.code.toLowerCase().includes(search) || p.desc.toLowerCase().includes(search);
+                const matchCat = cat === '' || p.cat === cat;
+                return matchSearch && matchCat;
+            });
 
-        carritoTransportadora = [];
-        renderCarritoTransportadora();
-        renderHistorial();
-        alert('Guía de transporte registrada con éxito.');
-    }
+            const tbody = document.getElementById('inventory-table-body');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--text-muted); padding: 30px;">No hay productos que coincidan con la búsqueda.</td></tr>`;
+                return;
+            }
 
-    /* ÁREAS */
-    function crearArea() {
-        const nombre = document.getElementById('in-nombre-area').value.trim();
-        const jefe = document.getElementById('in-jefe-area').value.trim();
-        if(!nombre || !jefe) return alert('Complete los datos del área.');
-        areasLista.push({ nombre, jefe });
-        document.getElementById('in-nombre-area').value = '';
-        document.getElementById('in-jefe-area').value = '';
-        renderAreas();
-        renderSelects();
-    }
-
-    function renderAreas() {
-        const tbody = document.getElementById('tbody-areas');
-        tbody.innerHTML = '';
-        areasLista.forEach(a => {
-            tbody.innerHTML += `<tr><td><strong>${a.nombre}</strong></td><td>${a.jefe}</td></tr>`;
-        });
-    }
-
-    /* HISTORIAL CON DESPLIEGUE E IMPRESIÓN DE PLANILLA COMPLETA */
-    function renderHistorial() {
-        const tbody = document.getElementById('tbody-historial');
-        tbody.innerHTML = '';
-        if(historialSalidas.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No hay movimientos registrados en el sistema.</td></tr>`;
-            return;
+            tbody.innerHTML = filtered.map(p => {
+                const isLow = Number(p.stock) <= Number(p.min);
+                return `
+                    <tr>
+                        <td><strong>${p.code}</strong><br><span style="font-size:12px; color:#64748b;">${p.desc}</span></td>
+                        <td>${p.unit}</td>
+                        <td><span class="badge badge-info">${p.cat}</span></td>
+                        <td>${p.location || '-'}</td>
+                        <td><strong style="font-size:14px; color:${isLow?'#dc2626':'#0f172a'}">${p.stock}</strong></td>
+                        <td>${p.min}</td>
+                        <td>${isLow ? '<span class="badge badge-danger">Bajo Mínimo</span>' : '<span class="badge badge-success">Normal</span>'}</td>
+                        <td>
+                            <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="editProduct(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteProduct(${p.id})"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
-        historialSalidas.forEach((h, index) => {
-            tbody.innerHTML += `
-                <tr style="cursor: pointer;" onclick="toggleDetalle(${index})">
-                    <td>${h.fecha}</td>
-                    <td><span class="badge badge-warning">${h.tipo}</span></td>
-                    <td><strong>${h.destino}</strong></td>
-                    <td>${h.items.length} ítem(s) 🔽 Haz clic para ver planilla</td>
-                </tr>
-                <tr id="detalle-${index}" style="display: none; background: #f8fafc;">
-                    <td colspan="4" style="padding: 1rem;">
-                        <div class="printable-area" id="print-mov-${index}" style="padding: 1.5rem; background: #fff; border: 1px solid #cbd5e1; border-radius: 4px;">
-                            <div class="print-header-format" style="display: block;">
-                                <div class="print-header-top">
-                                    <div class="print-company-info">
-                                        <h2>SISTEMA INTEGRADO DE ALMACÉN</h2>
-                                        <p>COMPROBANTE OFICIAL DE MOVIMIENTO Y TRAZABILIDAD</p>
-                                    </div>
-                                    <div class="print-doc-box">
-                                        <h3>${h.tipo.toUpperCase()}</h3>
-                                        <p>Fecha: ${h.fecha}</p>
-                                    </div>
-                                </div>
-                                <div class="print-meta-grid">
-                                    <div><strong>Destino / Proveedor:</strong> ${h.destino}</div>
-                                    <div><strong>Estado:</strong> Consolidado y Aprobado</div>
-                                </div>
-                            </div>
-                            <h4 style="margin-top: 1rem; color: var(--primary);">Desglose de Ítems del Movimiento:</h4>
-                            <div class="table-responsive">
-                                <table>
-                                    <thead><tr><th>Descripción / Ítem</th><th>Cantidad</th></tr></thead>
-                                    <tbody>
-                                        ${h.items.map(i => `<tr><td>${i.nombre || i.codigo}</td><td><strong>${i.cantidad}</strong></td></tr>`).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="print-signatures-box" style="display: flex;">
-                                <div class="signature-line">Firma Autorizada / Almacén</div>
-                                <div class="signature-line">Firma de Recibido Conforme</div>
-                            </div>
-                            <div style="margin-top: 1.5rem; text-align: right;" class="no-print">
-                                <button class="btn btn-secondary" onclick="event.stopPropagation(); imprimirMovimiento(${index})">🖨️ Imprimir Planilla Oficial Completa</button>
-                            </div>
-                        </div>
+
+        function openProductModal(prod = null) {
+            document.getElementById('modal-prod-title').innerText = prod ? 'Editar Producto' : 'Nuevo Producto';
+            document.getElementById('mp-id').value = prod ? prod.id : '';
+            document.getElementById('mp-code').value = prod ? prod.code : '';
+            document.getElementById('mp-desc').value = prod ? prod.desc : '';
+            document.getElementById('mp-unit').value = prod ? prod.unit : 'UN';
+            document.getElementById('mp-category').value = prod ? prod.cat : db.categories[0];
+            document.getElementById('mp-location').value = prod ? prod.location : '';
+            document.getElementById('mp-stock').value = prod ? prod.stock : 0;
+            document.getElementById('mp-min').value = prod ? prod.min : 5;
+            document.getElementById('product-modal').style.display = 'flex';
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').style.display = 'none';
+        }
+
+        function saveProductModal(e) {
+            e.preventDefault();
+            const id = document.getElementById('mp-id').value;
+            const prodData = {
+                id: id ? Number(id) : Date.now(),
+                code: document.getElementById('mp-code').value.toUpperCase(),
+                desc: document.getElementById('mp-desc').value,
+                unit: document.getElementById('mp-unit').value,
+                cat: document.getElementById('mp-category').value,
+                location: document.getElementById('mp-location').value,
+                stock: Number(document.getElementById('mp-stock').value),
+                min: Number(document.getElementById('mp-min').value)
+            };
+
+            if (id) {
+                const idx = db.products.findIndex(p => p.id === Number(id));
+                db.products[idx] = prodData;
+            } else {
+                db.products.push(prodData);
+            }
+
+            saveDB();
+            renderInventory();
+            closeProductModal();
+        }
+
+        function editProduct(id) {
+            const prod = db.products.find(p => p.id === id);
+            if (prod) openProductModal(prod);
+        }
+
+        function deleteProduct(id) {
+            if (confirm('¿Está seguro de eliminar este producto del inventario?')) {
+                db.products = db.products.filter(p => p.id !== id);
+                saveDB();
+                renderInventory();
+            }
+        }
+
+        // ENTRADAS LOGIC
+        function addEntradaProductRow() {
+            const container = document.getElementById('entrada-products-list');
+            const rowId = Date.now() + Math.random();
+            const options = db.products.map(p => `<option value="${p.id}">${p.code} - ${p.desc} (Stock: ${p.stock})</option>`).join('');
+            
+            const div = document.createElement('div');
+            div.className = 'product-line-item';
+            div.id = `ent-row-${rowId}`;
+            div.innerHTML = `
+                <select required class="ent-prod-id">${options}</select>
+                <input type="number" class="ent-prod-qty" min="1" value="1" placeholder="Cant." required>
+                <input type="text" class="ent-prod-obs" placeholder="Observación ítem">
+                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function saveEntrada(e) {
+            e.preventDefault();
+            const rows = document.querySelectorAll('#entrada-products-list .product-line-item');
+            if (rows.length === 0) return alert('Debe agregar al menos un producto.');
+
+            const items = [];
+            rows.forEach(r => {
+                const prodId = Number(r.querySelector('.ent-prod-id').value);
+                const qty = Number(r.querySelector('.ent-prod-qty').value);
+                const obs = r.querySelector('.ent-prod-obs').value;
+                items.push({ prodId, qty, obs });
+
+                // Update stock
+                const prod = db.products.find(p => p.id === prodId);
+                if (prod) prod.stock = Number(prod.stock) + qty;
+            });
+
+            const entrada = {
+                id: Date.now(),
+                fecha: document.getElementById('ent-fecha').value,
+                requisicion: document.getElementById('ent-requisicion').value,
+                quientrajo: document.getElementById('ent-quientrajo').value,
+                obs: document.getElementById('ent-obs').value,
+                items
+            };
+
+            db.entradas.push(entrada);
+            saveDB();
+            renderEntradasHistory();
+            renderInventory();
+            alert('Entrada a almacén guardada exitosamente y stock actualizado.');
+            document.getElementById('form-entrada').reset();
+            document.getElementById('entrada-products-list').innerHTML = '';
+            addEntradaProductRow();
+        }
+
+        function renderEntradasHistory() {
+            const filter = document.getElementById('filter-entradas').value.toLowerCase();
+            const tbody = document.getElementById('entradas-history-body');
+
+            const filtered = db.entradas.filter(e => 
+                e.requisicion.toLowerCase().includes(filter) || 
+                e.quientrajo.toLowerCase().includes(filter) ||
+                e.fecha.includes(filter)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No hay documentos registrados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(e => {
+                const itemsStr = e.items.map(i => {
+                    const p = db.products.find(pr => pr.id === i.prodId);
+                    return `${p ? p.desc : 'Producto'}: <strong>+${i.qty}</strong>`;
+                }).join('<br>');
+
+                return `
+                    <tr>
+                        <td>${e.fecha}</td>
+                        <td><strong>${e.requisicion}</strong></td>
+                        <td>${e.quientrajo}</td>
+                        <td>${itemsStr}</td>
+                        <td>${e.obs || '-'}</td>
+                        <td>
+                            <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteEntrada(${e.id})"><i class="fa-solid fa-trash"></i> Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function deleteEntrada(id) {
+            if (confirm('¿Eliminar esta entrada? ATENCIÓN: Se deshará el incremento de inventario.')) {
+                const ent = db.entradas.find(e => e.id === id);
+                if (ent) {
+                    // Revert stock
+                    ent.items.forEach(i => {
+                        const p = db.products.find(pr => pr.id === i.prodId);
+                        if (p) p.stock = Math.max(0, Number(p.stock) - i.qty);
+                    });
+                }
+                db.entradas = db.entradas.filter(e => e.id !== id);
+                saveDB();
+                renderEntradasHistory();
+                renderInventory();
+            }
+        }
+
+        // SALIDAS GENERALES LOGIC
+        function addSalidaProductRow() {
+            const container = document.getElementById('salida-products-list');
+            const options = db.products.map(p => `<option value="${p.id}">${p.code} - ${p.desc} (Disponible: ${p.stock})</option>`).join('');
+            
+            const div = document.createElement('div');
+            div.className = 'product-line-item';
+            div.innerHTML = `
+                <select required class="sal-prod-id">${options}</select>
+                <input type="number" class="sal-prod-qty" min="1" value="1" placeholder="Cant." required>
+                <input type="text" class="sal-prod-obs" placeholder="Destino / Observación">
+                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function saveSalida(e) {
+            e.preventDefault();
+            const rows = document.querySelectorAll('#salida-products-list .product-line-item');
+            if (rows.length === 0) return alert('Debe agregar al menos un producto.');
+
+            const items = [];
+            let stockError = false;
+
+            rows.forEach(r => {
+                const prodId = Number(r.querySelector('.sal-prod-id').value);
+                const qty = Number(r.querySelector('.sal-prod-qty').value);
+                const obs = r.querySelector('.sal-prod-obs').value;
+
+                const prod = db.products.find(p => p.id === prodId);
+                if (prod && prod.stock < qty) {
+                    alert(`Stock insuficiente para ${prod.desc}. Disponible: ${prod.stock}, Solicitado: ${qty}`);
+                    stockError = true;
+                }
+                items.push({ prodId, qty, obs });
+            });
+
+            if (stockError) return;
+
+            // Deduct stock
+            items.forEach(i => {
+                const prod = db.products.find(p => p.id === i.prodId);
+                if (prod) prod.stock -= i.qty;
+            });
+
+            const salida = {
+                id: Date.now(),
+                fecha: document.getElementById('sal-fecha').value,
+                pidio: document.getElementById('sal-pidio').value,
+                area: document.getElementById('sal-area').value,
+                entrego: document.getElementById('sal-entrego').value,
+                obs: document.getElementById('sal-obs').value,
+                items
+            };
+
+            db.salidas.push(salida);
+            saveDB();
+            renderSalidasHistory();
+            renderInventory();
+            alert('Salida registrada correctamente.');
+            document.getElementById('form-salida').reset();
+            document.getElementById('salida-products-list').innerHTML = '';
+            addSalidaProductRow();
+        }
+
+        function renderSalidasHistory() {
+            const tbody = document.getElementById('salidas-history-body');
+            if (db.salidas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No hay documentos registrados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = db.salidas.map(s => {
+                const itemsStr = s.items.map(i => {
+                    const p = db.products.find(pr => pr.id === i.prodId);
+                    return `${p ? p.desc : 'Producto'}: <strong>-${i.qty}</strong>`;
+                }).join('<br>');
+
+                return `
+                    <tr>
+                        <td><strong>SAL-${s.id.toString().slice(-4)}</strong></td>
+                        <td>${s.fecha}</td>
+                        <td>${s.pidio}</td>
+                        <td><span class="badge badge-info">${s.area}</span></td>
+                        <td>${itemsStr}</td>
+                        <td>
+                            <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="printSalidaVoucher(${s.id})"><i class="fa-solid fa-print"></i> Ver / Imprimir</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // SALIDAS POR ÁREA (CON COMPROBANTE DE ENTREGA Y FIRMAS)
+        function addSAProductRow() {
+            const container = document.getElementById('sa-products-list');
+            const options = db.products.map(p => `<option value="${p.id}">${p.code} - ${p.desc} (Disponible: ${p.stock})</option>`).join('');
+            
+            const div = document.createElement('div');
+            div.className = 'product-line-item';
+            div.innerHTML = `
+                <select required class="sa-prod-id">${options}</select>
+                <input type="number" class="sa-prod-qty" min="1" value="1" placeholder="Cant." required>
+                <input type="text" class="sa-prod-obs" placeholder="Detalle / Observación">
+                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function saveSalidaArea(e) {
+            e.preventDefault();
+            const rows = document.querySelectorAll('#sa-products-list .product-line-item');
+            if (rows.length === 0) return alert('Debe agregar al menos un producto.');
+
+            const items = [];
+            rows.forEach(r => {
+                const prodId = Number(r.querySelector('.sa-prod-id').value);
+                const qty = Number(r.querySelector('.sa-prod-qty').value);
+                const obs = r.querySelector('.sa-prod-obs').value;
+                items.push({ prodId, qty, obs });
+
+                // Deduct stock
+                const prod = db.products.find(p => p.id === prodId);
+                if (prod) prod.stock = Math.max(0, prod.stock - qty);
+            });
+
+            const saNum = 'COMP-' + String(db.salidasArea.length + 1).padStart(4, '0');
+            const saData = {
+                id: Date.now(),
+                consecutivo: saNum,
+                fecha: document.getElementById('sa-fecha').value,
+                area: document.getElementById('sa-area').value,
+                responsable: document.getElementById('sa-responsable').value,
+                almacenista: document.getElementById('sa-almacenista').value,
+                obs: document.getElementById('sa-obs').value,
+                items
+            };
+
+            db.salidasArea.push(saData);
+            saveDB();
+            renderSAHistory();
+            renderInventory();
+            
+            // Print automatically
+            printSAComprobante(saData.id);
+
+            document.getElementById('form-salida-area').reset();
+            document.getElementById('sa-products-list').innerHTML = '';
+            addSAProductRow();
+        }
+
+        function renderSAHistory() {
+            const tbody = document.getElementById('sa-history-body');
+            if (db.salidasArea.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No hay documentos registrados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = db.salidasArea.map(sa => `
+                <tr>
+                    <td><strong>${sa.consecutivo}</strong></td>
+                    <td>${sa.fecha}</td>
+                    <td><span class="badge badge-info">${sa.area}</span></td>
+                    <td>${sa.responsable}</td>
+                    <td>${sa.almacenista}</td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="printSAComprobante(${sa.id})"><i class="fa-solid fa-print"></i> Comprobante</button>
                     </td>
                 </tr>
+            `).join('');
+        }
+
+        function printSAComprobante(id) {
+            const sa = db.salidasArea.find(s => s.id === id);
+            if (!sa) return;
+
+            const itemsHtml = sa.items.map((i, idx) => {
+                const p = db.products.find(pr => pr.id === i.prodId);
+                return `
+                    <tr>
+                        <td style="text-align:center;">${idx + 1}</td>
+                        <td>${p ? p.code : '-'}</td>
+                        <td>${p ? p.desc : 'Producto'}</td>
+                        <td style="text-align:center;">${i.qty}</td>
+                        <td>${i.obs || ''}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const html = `
+                <div class="voucher-header">
+                    <div>
+                        <h2>ALMACÉN VOLCAN GOLD - CONTROL INTEGRAL</h2>
+                        <p style="font-size:12px;">Comprobante de Entrega Interna por Área</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <span class="voucher-title">${sa.consecutivo}</span>
+                        <p style="font-size:12px;">Fecha: ${sa.fecha}</p>
+                    </div>
+                </div>
+
+                <div class="voucher-meta">
+                    <div><strong>Área Destino:</strong> ${sa.area}</div>
+                    <div><strong>Responsable Área (Recibe):</strong> ${sa.responsable}</div>
+                    <div><strong>Almacenista (Entrega):</strong> ${sa.almacenista}</div>
+                    <div><strong>Observaciones:</strong> ${sa.obs || 'N/A'}</div>
+                </div>
+
+                <table class="voucher-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;">#</th>
+                            <th>Código</th>
+                            <th>Descripción del Producto</th>
+                            <th style="width:80px; text-align:center;">Cantidad</th>
+                            <th>Notas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHtml}
+                    </tbody>
+                </table>
+
+                <div class="signature-box">
+                    <div>
+                        <div style="height:60px;"></div>
+                        <div class="signature-line">${sa.almacenista}<br><span style="font-weight:normal; font-size:11px;">FIRMA ALMACENISTA</span></div>
+                    </div>
+                    <div>
+                        <div style="height:60px;"></div>
+                        <div class="signature-line">${sa.responsable}<br><span style="font-weight:normal; font-size:11px;">FIRMA RESPONSABLE DE ÁREA</span></div>
+                    </div>
+                </div>
             `;
-        });
-    }
 
-    function toggleDetalle(index) {
-        const fila = document.getElementById(`detalle-${index}`);
-        fila.style.display = fila.style.display === 'none' ? 'table-row' : 'none';
-    }
+            document.getElementById('printable-voucher-body').innerHTML = html;
+            document.getElementById('print-modal').style.display = 'flex';
+        }
 
-    function imprimirMovimiento(index) {
-        const el = document.getElementById(`print-mov-${index}`);
-        el.classList.add('printable-area');
-        window.print();
-    }
+        // ENVÍOS SEDE OPERATIVA LOGIC
+        function addESProductRow() {
+            const container = document.getElementById('es-products-list');
+            const div = document.createElement('div');
+            div.className = 'product-line-item';
+            div.style.gridTemplateColumns = '2fr 1fr 2fr 40px';
+            div.innerHTML = `
+                <input type="text" class="es-prod-name" placeholder="Descripción libre del producto" required>
+                <input type="number" class="es-prod-qty" min="1" value="1" placeholder="Cant." required>
+                <input type="text" class="es-prod-obs" placeholder="Observación / Estado">
+                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            container.appendChild(div);
+        }
 
-    function limpiarHistorial() {
-        historialSalidas = [];
-        renderHistorial();
-    }
+        function saveEnvioSede(e) {
+            e.preventDefault();
+            const rows = document.querySelectorAll('#es-products-list .product-line-item');
+            if (rows.length === 0) return alert('Debe agregar al menos un producto a la planilla.');
 
-    /* USUARIOS */
-    function registrarNuevoUsuario() {
-        const user = document.getElementById('nuevo-user').value.trim();
-        const nombre = document.getElementById('nuevo-nombre-completo').value.trim();
-        const pass = document.getElementById('nuevo-pass').value.trim();
+            const items = [];
+            rows.forEach(r => {
+                items.push({
+                    name: r.querySelector('.es-prod-name').value,
+                    qty: Number(r.querySelector('.es-prod-qty').value),
+                    obs: r.querySelector('.es-prod-obs').value
+                });
+            });
 
-        if(!user || !nombre || !pass) return alert('Complete todos los campos de usuario.');
-        if(usuarios.some(u => u.user === user)) return alert('El nombre de usuario ya está registrado.');
+            const esNum = 'PLN-' + String(db.enviosSede.length + 1).padStart(4, '0');
+            const esData = {
+                id: Date.now(),
+                consecutivo: esNum,
+                fecha: document.getElementById('es-fecha').value,
+                destino: document.getElementById('es-destino').value,
+                chofer: document.getElementById('es-chofer').value,
+                placa: document.getElementById('es-placa').value,
+                almacenista: document.getElementById('es-almacenista').value,
+                items
+            };
 
-        usuarios.push({ user, nombre, pass });
-        alert('Usuario creado exitosamente.');
-        document.getElementById('nuevo-user').value = '';
-        document.getElementById('nuevo-nombre-completo').value = '';
-        document.getElementById('nuevo-pass').value = '';
-        renderUsuarios();
-    }
+            db.enviosSede.push(esData);
+            saveDB();
+            renderESHistory();
 
-    function renderUsuarios() {
-        const tbody = document.getElementById('tbody-usuarios');
-        tbody.innerHTML = '';
-        usuarios.forEach((u, index) => {
-            tbody.innerHTML += `<tr><td><strong>${u.user}</strong></td><td>${u.nombre}</td><td><span class="badge badge-success">Activo</span></td><td>${index > 0 ? `<button class="btn btn-danger" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="usuarios.splice(${index},1); renderUsuarios();">Eliminar</button>` : 'Sistema'}</td></tr>`;
-        });
-    }
-</script>
+            printESPlanilla(esData.id);
 
+            document.getElementById('form-envio-sede').reset();
+            document.getElementById('es-products-list').innerHTML = '';
+            addESProductRow();
+        }
+
+        function renderESHistory() {
+            const tbody = document.getElementById('es-history-body');
+            if (db.enviosSede.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No hay planillas generadas.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = db.enviosSede.map(es => `
+                <tr>
+                    <td><strong>${es.consecutivo}</strong></td>
+                    <td>${es.fecha}</td>
+                    <td>${es.destino}</td>
+                    <td>${es.chofer}</td>
+                    <td><span class="badge badge-info">${es.placa}</span></td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="printESPlanilla(${es.id})"><i class="fa-solid fa-print"></i> Planilla PDF</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function printESPlanilla(id) {
+            const es = db.enviosSede.find(e => e.id === id);
+            if (!es) return;
+
+            const itemsHtml = es.items.map((i, idx) => `
+                <tr>
+                    <td style="text-align:center;">${idx + 1}</td>
+                    <td>${i.name}</td>
+                    <td style="text-align:center;">${i.qty}</td>
+                    <td>${i.obs || '-'}</td>
+                </tr>
+            `).join('');
+
+            const html = `
+                <div class="voucher-header">
+                    <div>
+                        <h2>PLANILLA DE DESPACHO </h2>
+                        <p style="font-size:12px;">Control de transporte y envío de materiales</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <span class="voucher-title">${es.consecutivo}</span>
+                        <p style="font-size:12px;">Fecha: ${es.fecha}</p>
+                    </div>
+                </div>
+
+                <div class="voucher-meta">
+                    <div><strong>Sede Destino:</strong> ${es.destino}</div>
+                    <div><strong>Conductor / Chofer:</strong> ${es.chofer}</div>
+                    <div><strong>Placa Vehículo:</strong> ${es.placa}</div>
+                    <div><strong>Despachador (Almacén):</strong> ${es.almacenista}</div>
+                </div>
+
+                <table class="voucher-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;">#</th>
+                            <th>Descripción / Producto libre</th>
+                            <th style="width:80px; text-align:center;">Cantidad</th>
+                            <th>Observaciones / Especificaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHtml}
+                    </tbody>
+                </table>
+
+                <div class="signature-box">
+                    <div>
+                        <div style="height:60px;"></div>
+                        <div class="signature-line">${es.almacenista}<br><span style="font-weight:normal; font-size:11px;">FIRMA ALMACENISTA (DESPACHA)</span></div>
+                    </div>
+                    <div>
+                        <div style="height:60px;"></div>
+                        <div class="signature-line">${es.chofer}<br><span style="font-weight:normal; font-size:11px;">FIRMA CHOFER / CONDUCTOR (RECIBE CONFORME)</span></div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('printable-voucher-body').innerHTML = html;
+            document.getElementById('print-modal').style.display = 'flex';
+        }
+
+        // COMBUSTIBLE LOGIC
+        function saveCombustible(e) {
+            e.preventDefault();
+            const mov = {
+                id: Date.now(),
+                fecha: document.getElementById('comb-fecha').value,
+                tipo: document.getElementById('comb-tipo').value,
+                cantidad: Number(document.getElementById('comb-cantidad').value),
+                persona: document.getElementById('comb-persona').value,
+                placa: document.getElementById('comb-placa').value,
+                obs: document.getElementById('comb-obs').value
+            };
+
+            db.combustible.push(mov);
+            saveDB();
+            renderCombustible();
+            document.getElementById('form-combustible').reset();
+            alert('Movimiento de combustible registrado.');
+        }
+
+        function renderCombustible() {
+            let totalIn = 0, totalOut = 0;
+            db.combustible.forEach(c => {
+                if (c.tipo === 'ENTRADA') totalIn += Number(c.cantidad);
+                else totalOut += Number(c.cantidad);
+            });
+
+            document.getElementById('comb-in-total').innerText = totalIn;
+            document.getElementById('comb-out-total').innerText = totalOut;
+            document.getElementById('comb-mov-count').innerText = db.combustible.length;
+
+            const tbody = document.getElementById('comb-history-body');
+            if (db.combustible.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted);">No hay registros.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = db.combustible.map(c => `
+                <tr>
+                    <td>${c.fecha}</td>
+                    <td><span class="badge ${c.tipo === 'ENTRADA' ? 'badge-success' : 'badge-danger'}">${c.tipo}</span></td>
+                    <td><strong>${c.tipo === 'ENTRADA' ? '+' : '-'}${c.cantidad} Timbos</strong></td>
+                    <td>${c.persona}</td>
+                    <td>${c.placa || '-'}</td>
+                    <td>${c.obs || '-'}</td>
+                    <td>
+                        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteCombustible(${c.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteCombustible(id) {
+            if (confirm('¿Eliminar registro de combustible?')) {
+                db.combustible = db.combustible.filter(c => c.id !== id);
+                saveDB();
+                renderCombustible();
+            }
+        }
+
+        // CONFIGURATION LOGIC
+        function renderConfig() {
+            // Areas
+            const areasUl = document.getElementById('cfg-areas-list');
+            areasUl.innerHTML = db.areas.map(a => `
+                <li style="display:flex; justify-between; align-items:center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+                    <div>
+                        <strong>${a.name}</strong><br>
+                        <span style="font-size:11px; color:#64748b;">Jefe: ${a.boss || 'No asignado'}</span>
+                    </div>
+                    <button class="btn btn-danger" style="padding:2px 6px; font-size:10px;" onclick="deleteArea(${a.id})"><i class="fa-solid fa-trash"></i></button>
+                </li>
+            `).join('');
+
+            // Categories
+            const catsUl = document.getElementById('cfg-cats-list');
+            catsUl.innerHTML = db.categories.map(c => `
+                <li style="display:flex; justify-content:space-between; align-items:center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+                    <span>${c}</span>
+                    <button class="btn btn-danger" style="padding:2px 6px; font-size:10px;" onclick="deleteCategory('${c}')"><i class="fa-solid fa-trash"></i></button>
+                </li>
+            `).join('');
+
+            // Users
+            const usersDiv = document.getElementById('cfg-users-list');
+            usersDiv.innerHTML = db.users.map(u => `
+                <div style="background:#f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size:12px;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong>${u.name} (${u.role})</strong>
+                        <span class="badge ${u.blocked ? 'badge-danger' : 'badge-success'}">${u.blocked ? 'Bloqueado' : 'Activo'}</span>
+                    </div>
+                    <div style="margin-top:4px; color:#64748b;">Pass: ${u.pass}</div>
+                    <div style="margin-top:8px; display:flex; gap: 6px;">
+                        <button class="btn btn-secondary" style="padding:2px 6px; font-size:10px;" onclick="toggleBlockUser(${u.id})">${u.blocked ? 'Desbloquear' : 'Bloquear'}</button>
+                        <button class="btn btn-danger" style="padding:2px 6px; font-size:10px;" onclick="deleteUser(${u.id})">Eliminar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveArea(e) {
+            e.preventDefault();
+            const name = document.getElementById('cfg-area-name').value;
+            const boss = document.getElementById('cfg-area-boss').value;
+            db.areas.push({ id: Date.now(), name, boss });
+            saveDB();
+            populateDropdowns();
+            renderConfig();
+            document.getElementById('cfg-area-name').value = '';
+            document.getElementById('cfg-area-boss').value = '';
+        }
+
+        function deleteArea(id) {
+            db.areas = db.areas.filter(a => a.id !== id);
+            saveDB();
+            populateDropdowns();
+            renderConfig();
+        }
+
+        function saveCategory(e) {
+            e.preventDefault();
+            const cat = document.getElementById('cfg-cat-name').value.trim();
+            if (cat && !db.categories.includes(cat)) {
+                db.categories.push(cat);
+                saveDB();
+                populateDropdowns();
+                renderConfig();
+                document.getElementById('cfg-cat-name').value = '';
+            }
+        }
+
+        function deleteCategory(cat) {
+            db.categories = db.categories.filter(c => c !== cat);
+            saveDB();
+            populateDropdowns();
+            renderConfig();
+        }
+
+        function saveUser(e) {
+            e.preventDefault();
+            const name = document.getElementById('cfg-user-name').value;
+            const pass = document.getElementById('cfg-user-pass').value;
+            const role = document.getElementById('cfg-user-role').value;
+            db.users.push({ id: Date.now(), name, pass, role, blocked: false });
+            saveDB();
+            renderConfig();
+            document.getElementById('cfg-user-name').value = '';
+            document.getElementById('cfg-user-pass').value = '';
+        }
+
+        function toggleBlockUser(id) {
+            const u = db.users.find(usr => usr.id === id);
+            if (u) {
+                u.blocked = !u.blocked;
+                saveDB();
+                renderConfig();
+            }
+        }
+
+        function deleteUser(id) {
+            if (db.users.length <= 1) return alert('No puedes eliminar el único usuario.');
+            db.users = db.users.filter(u => u.id !== id);
+            saveDB();
+            renderConfig();
+        }
+
+        function closePrintModal() {
+            document.getElementById('print-modal').style.display = 'none';
+        }
+
+        function logout() {
+            alert('Sesión cerrada correctamente.');
+        }
+    </script>
 </body>
 </html>
+'''
