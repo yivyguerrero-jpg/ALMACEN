@@ -505,6 +505,9 @@
             font-size: 12px;
         }
 
+        .product-line-item > div { min-width: 0; }
+        .product-line-item small { color: var(--text-muted); }
+
         /* Config cards grid */
         .config-grid {
             display: grid;
@@ -533,6 +536,10 @@
             <a class="menu-item active" onclick="showTab('dashboard')">
                 <i class="fa-solid fa-house"></i>
                 <span>Dashboard</span>
+            </a>
+            <a class="menu-item" onclick="showTab('requisiciones')">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span>Requisiciones / Recepción</span>
             </a>
             <a class="menu-item" onclick="showTab('inventario')">
                 <i class="fa-solid fa-boxes-stacked"></i>
@@ -640,7 +647,61 @@
                 </div>
             </div>
 
-            <!-- TAB 2: INVENTARIO GENERAL -->
+            <!-- TAB 2: REQUISICIONES Y RECEPCIÓN -->
+            <div id="tab-requisiciones" class="tab-content" style="display:none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">Requisiciones y recepción de mercancía</h2>
+                        <p class="page-subtitle">Control de lo solicitado, recibido y pendiente por llegar</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-title">REQUISICIONES</div><div class="stat-value" id="req-count">0</div><div class="stat-desc">Registradas</div></div>
+                    <div class="stat-card"><div class="stat-title">PENDIENTES</div><div class="stat-value" id="req-pending-count">0</div><div class="stat-desc">Con mercancía pendiente</div></div>
+                    <div class="stat-card"><div class="stat-title">RECEPCIONES</div><div class="stat-value" id="rec-count">0</div><div class="stat-desc">Movimientos registrados</div></div>
+                    <div class="stat-card"><div class="stat-title">UNIDADES PENDIENTES</div><div class="stat-value" id="req-pending-units">0</div><div class="stat-desc">Por recibir</div></div>
+                </div>
+
+                <div class="config-grid">
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom:16px;">Nueva requisición</h3>
+                        <form onsubmit="saveRequisicion(event)">
+                            <div class="form-grid">
+                                <div class="form-group"><label>Fecha</label><input type="date" id="req-fecha" required></div>
+                                <div class="form-group"><label>Proveedor / origen</label><input type="text" id="req-proveedor" placeholder="Proveedor o compra" required></div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group"><label>Solicitante / área</label><input type="text" id="req-solicitante" required placeholder="Área o responsable"></div>
+                                <div class="form-group"><label>Observaciones</label><input type="text" id="req-obs" placeholder="Opcional"></div>
+                            </div>
+                            <h4 style="margin:16px 0 10px;">Productos solicitados</h4>
+                            <div id="req-products-list"></div>
+                            <button type="button" class="btn btn-secondary" onclick="addReqProductRow()" style="margin-bottom:16px;">+ Agregar producto</button>
+                            <button type="submit" class="btn btn-primary">Registrar requisición</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom:16px;">Registrar recepción</h3>
+                        <form onsubmit="saveRecepcion(event)">
+                            <div class="form-group" style="margin-bottom:12px;"><label>Requisición</label><select id="rec-requisicion" required onchange="loadRecepcionItems()"></select></div>
+                            <div class="form-group" style="margin-bottom:12px;"><label>Fecha de recepción</label><input type="date" id="rec-fecha" required></div>
+                            <div class="form-group" style="margin-bottom:12px;"><label>Recibió / entregó</label><input type="text" id="rec-persona" required placeholder="Nombre"></div>
+                            <div class="form-group" style="margin-bottom:12px;"><label>Observación</label><input type="text" id="rec-obs" placeholder="Factura, guía, faltantes, etc."></div>
+                            <div id="rec-items-list"></div>
+                            <button type="submit" class="btn btn-primary">Registrar recepción y actualizar inventario</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h3 class="card-title">Estado de requisiciones</h3></div>
+                    <div class="table-container"><table><thead><tr><th>Requisición</th><th>Fecha</th><th>Proveedor</th><th>Solicitante</th><th>Productos</th><th>Estado</th></tr></thead><tbody id="req-history-body"></tbody></table></div>
+                </div>
+            </div>
+
+            <!-- TAB 3: INVENTARIO GENERAL -->
             <div id="tab-inventario" class="tab-content" style="display:none;">
                 <div class="page-header">
                     <div>
@@ -1193,6 +1254,9 @@
             entradas: JSON.parse(localStorage.getItem('db_entradas')) || [],
             salidas: JSON.parse(localStorage.getItem('db_salidas')) || [],
             salidasArea: JSON.parse(localStorage.getItem('db_salidasArea')) || [],
+            requisiciones: JSON.parse(localStorage.getItem('db_requisiciones')) || [],
+            recepciones: JSON.parse(localStorage.getItem('db_recepciones')) || [],
+            movimientos: JSON.parse(localStorage.getItem('db_movimientos')) || [],
             enviosSede: JSON.parse(localStorage.getItem('db_enviosSede')) || [],
             combustible: JSON.parse(localStorage.getItem('db_combustible')) || [
                 { id: 1, fecha: '2026-09-01', tipo: 'ENTRADA', cantidad: 20, persona: 'Juan Perez', placa: 'TRK-100', obs: 'Carga inicial' }
@@ -1214,6 +1278,9 @@
             localStorage.setItem('db_entradas', JSON.stringify(db.entradas));
             localStorage.setItem('db_salidas', JSON.stringify(db.salidas));
             localStorage.setItem('db_salidasArea', JSON.stringify(db.salidasArea));
+            localStorage.setItem('db_requisiciones', JSON.stringify(db.requisiciones));
+            localStorage.setItem('db_recepciones', JSON.stringify(db.recepciones));
+            localStorage.setItem('db_movimientos', JSON.stringify(db.movimientos));
             localStorage.setItem('db_enviosSede', JSON.stringify(db.enviosSede));
             localStorage.setItem('db_combustible', JSON.stringify(db.combustible));
             localStorage.setItem('db_areas', JSON.stringify(db.areas));
@@ -1234,6 +1301,8 @@
             populateDropdowns();
             renderDashboard();
             renderInventory();
+            renderRequisiciones();
+            loadRecepcionDropdown();
             renderEntradasHistory();
             renderSalidasHistory();
             renderSAHistory();
@@ -1243,6 +1312,8 @@
 
             // Add initial empty rows to forms
             addEntradaProductRow();
+            addReqProductRow();
+            initDates();
             addSalidaProductRow();
             addSAProductRow();
             addESProductRow();
@@ -1257,6 +1328,7 @@
 
             const names = {
                 'dashboard': 'Dashboard',
+                'requisiciones': 'Requisiciones / Recepción',
                 'inventario': 'Inventario general',
                 'entradas': 'Entradas a almacén',
                 'salidas': 'Salidas de almacén',
@@ -1389,6 +1461,7 @@
             document.getElementById('mp-category').value = prod ? prod.cat : db.categories[0];
             document.getElementById('mp-location').value = prod ? prod.location : '';
             document.getElementById('mp-stock').value = prod ? prod.stock : 0;
+            document.getElementById('mp-stock').disabled = !!prod;
             document.getElementById('mp-min').value = prod ? prod.min : 5;
             document.getElementById('product-modal').style.display = 'flex';
         }
@@ -1407,7 +1480,7 @@
                 unit: document.getElementById('mp-unit').value,
                 cat: document.getElementById('mp-category').value,
                 location: document.getElementById('mp-location').value,
-                stock: Number(document.getElementById('mp-stock').value),
+                stock: id ? (db.products.find(p => p.id === Number(id))?.stock || 0) : Number(document.getElementById('mp-stock').value),
                 min: Number(document.getElementById('mp-min').value)
             };
 
@@ -1468,11 +1541,12 @@
 
                 // Update stock
                 const prod = db.products.find(p => p.id === prodId);
-                if (prod) prod.stock = Number(prod.stock) + qty;
+                if (prod) { prod.stock = Number(prod.stock) + qty; }
             });
 
             const entrada = {
                 id: Date.now(),
+                consecutivo: nextConsecutive('ENT-', db.entradas, 'consecutivo'),
                 fecha: document.getElementById('ent-fecha').value,
                 requisicion: document.getElementById('ent-requisicion').value,
                 quientrajo: document.getElementById('ent-quientrajo').value,
@@ -1481,6 +1555,7 @@
             };
 
             db.entradas.push(entrada);
+            items.forEach(i => registrarMovimiento('ENTRADA', entrada.consecutivo, i.prodId, i.qty, entrada.fecha, entrada.requisicion));
             saveDB();
             renderEntradasHistory();
             renderInventory();
@@ -1527,20 +1602,7 @@
         }
 
         function deleteEntrada(id) {
-            if (confirm('¿Eliminar esta entrada? ATENCIÓN: Se deshará el incremento de inventario.')) {
-                const ent = db.entradas.find(e => e.id === id);
-                if (ent) {
-                    // Revert stock
-                    ent.items.forEach(i => {
-                        const p = db.products.find(pr => pr.id === i.prodId);
-                        if (p) p.stock = Math.max(0, Number(p.stock) - i.qty);
-                    });
-                }
-                db.entradas = db.entradas.filter(e => e.id !== id);
-                saveDB();
-                renderEntradasHistory();
-                renderInventory();
-            }
+            alert('Para proteger la trazabilidad, las entradas registradas no se eliminan ni se reversan automáticamente. En la siguiente versión se gestionarán mediante anulación/ajuste autorizado.');
         }
 
         // SALIDAS GENERALES LOGIC
@@ -1564,32 +1626,33 @@
             const rows = document.querySelectorAll('#salida-products-list .product-line-item');
             if (rows.length === 0) return alert('Debe agregar al menos un producto.');
 
+            const totals = {};
             const items = [];
-            let stockError = false;
-
             rows.forEach(r => {
                 const prodId = Number(r.querySelector('.sal-prod-id').value);
                 const qty = Number(r.querySelector('.sal-prod-qty').value);
                 const obs = r.querySelector('.sal-prod-obs').value;
-
-                const prod = db.products.find(p => p.id === prodId);
-                if (prod && prod.stock < qty) {
-                    alert(`Stock insuficiente para ${prod.desc}. Disponible: ${prod.stock}, Solicitado: ${qty}`);
-                    stockError = true;
-                }
+                if (!Number.isFinite(qty) || qty <= 0) return;
+                totals[prodId] = (totals[prodId] || 0) + qty;
                 items.push({ prodId, qty, obs });
             });
 
-            if (stockError) return;
+            for (const [prodId, total] of Object.entries(totals)) {
+                const prod = db.products.find(p => p.id === Number(prodId));
+                if (!prod) return alert('Hay un producto inválido en la salida.');
+                if (Number(prod.stock) < total) {
+                    return alert(`Stock insuficiente para ${prod.desc}. Disponible: ${prod.stock}, solicitado en esta salida: ${total}.`);
+                }
+            }
 
-            // Deduct stock
-            items.forEach(i => {
-                const prod = db.products.find(p => p.id === i.prodId);
-                if (prod) prod.stock -= i.qty;
+            Object.entries(totals).forEach(([prodId, total]) => {
+                const prod = db.products.find(p => p.id === Number(prodId));
+                prod.stock -= total;
             });
 
             const salida = {
                 id: Date.now(),
+                consecutivo: nextConsecutive('SAL-', db.salidas, 'consecutivo'),
                 fecha: document.getElementById('sal-fecha').value,
                 pidio: document.getElementById('sal-pidio').value,
                 area: document.getElementById('sal-area').value,
@@ -1599,9 +1662,11 @@
             };
 
             db.salidas.push(salida);
+            items.forEach(i => registrarMovimiento('SALIDA', salida.consecutivo, i.prodId, -i.qty, salida.fecha, salida.pidio));
             saveDB();
             renderSalidasHistory();
             renderInventory();
+            renderDashboard();
             alert('Salida registrada correctamente.');
             document.getElementById('form-salida').reset();
             document.getElementById('salida-products-list').innerHTML = '';
@@ -1623,7 +1688,7 @@
 
                 return `
                     <tr>
-                        <td><strong>SAL-${s.id.toString().slice(-4)}</strong></td>
+                        <td><strong>${s.consecutivo || ('SAL-' + s.id.toString().slice(-4))}</strong></td>
                         <td>${s.fecha}</td>
                         <td>${s.pidio}</td>
                         <td><span class="badge badge-info">${s.area}</span></td>
@@ -1634,6 +1699,13 @@
                     </tr>
                 `;
             }).join('');
+        }
+
+        function printSalidaVoucher(id) {
+            const s=db.salidas.find(x=>x.id===id); if(!s) return;
+            const itemsHtml=s.items.map((i,idx)=>{const p=db.products.find(pr=>pr.id===i.prodId);return `<tr><td>${idx+1}</td><td>${p?p.code:'-'}</td><td>${p?p.desc:'Producto'}</td><td>${i.qty}</td><td>${i.obs||''}</td></tr>`;}).join('');
+            document.getElementById('printable-voucher-body').innerHTML=`<div class="voucher-header"><div><h2>ALMACÉN VOLCAN GOLD</h2><p style="font-size:12px;">Comprobante de salida de almacén</p></div><div style="text-align:right;"><span class="voucher-title">${s.consecutivo||('SAL-'+s.id.toString().slice(-4))}</span><p style="font-size:12px;">Fecha: ${s.fecha}</p></div></div><div class="voucher-meta"><div><strong>Solicitante:</strong> ${s.pidio}</div><div><strong>Área:</strong> ${s.area}</div><div><strong>Entrega:</strong> ${s.entrego}</div><div><strong>Observaciones:</strong> ${s.obs||'N/A'}</div></div><table class="voucher-table"><thead><tr><th>#</th><th>Código</th><th>Producto</th><th>Cantidad</th><th>Observación</th></tr></thead><tbody>${itemsHtml}</tbody></table>`;
+            document.getElementById('print-modal').style.display='flex';
         }
 
         // SALIDAS POR ÁREA (CON COMPROBANTE DE ENTREGA Y FIRMAS)
@@ -1657,38 +1729,41 @@
             const rows = document.querySelectorAll('#sa-products-list .product-line-item');
             if (rows.length === 0) return alert('Debe agregar al menos un producto.');
 
+            const totals = {};
             const items = [];
             rows.forEach(r => {
                 const prodId = Number(r.querySelector('.sa-prod-id').value);
                 const qty = Number(r.querySelector('.sa-prod-qty').value);
                 const obs = r.querySelector('.sa-prod-obs').value;
+                if (!Number.isFinite(qty) || qty <= 0) return;
+                totals[prodId] = (totals[prodId] || 0) + qty;
                 items.push({ prodId, qty, obs });
-
-                // Deduct stock
-                const prod = db.products.find(p => p.id === prodId);
-                if (prod) prod.stock = Math.max(0, prod.stock - qty);
             });
 
-            const saNum = 'COMP-' + String(db.salidasArea.length + 1).padStart(4, '0');
+            for (const [prodId, total] of Object.entries(totals)) {
+                const prod = db.products.find(p => p.id === Number(prodId));
+                if (!prod) return alert('Hay un producto inválido en la entrega.');
+                if (Number(prod.stock) < total) return alert(`Stock insuficiente para ${prod.desc}. Disponible: ${prod.stock}, solicitado: ${total}.`);
+            }
+
+            Object.entries(totals).forEach(([prodId, total]) => {
+                const prod = db.products.find(p => p.id === Number(prodId));
+                prod.stock -= total;
+            });
+
+            const saNum = nextConsecutive('COMP-', db.salidasArea, 'consecutivo');
             const saData = {
-                id: Date.now(),
-                consecutivo: saNum,
+                id: Date.now(), consecutivo: saNum,
                 fecha: document.getElementById('sa-fecha').value,
                 area: document.getElementById('sa-area').value,
                 responsable: document.getElementById('sa-responsable').value,
                 almacenista: document.getElementById('sa-almacenista').value,
-                obs: document.getElementById('sa-obs').value,
-                items
+                obs: document.getElementById('sa-obs').value, items
             };
-
             db.salidasArea.push(saData);
-            saveDB();
-            renderSAHistory();
-            renderInventory();
-            
-            // Print automatically
+            items.forEach(i => registrarMovimiento('SALIDA ÁREA', saNum, i.prodId, -i.qty, saData.fecha, saData.area));
+            saveDB(); renderSAHistory(); renderInventory(); renderDashboard();
             printSAComprobante(saData.id);
-
             document.getElementById('form-salida-area').reset();
             document.getElementById('sa-products-list').innerHTML = '';
             addSAProductRow();
@@ -1782,6 +1857,89 @@
             document.getElementById('print-modal').style.display = 'flex';
         }
 
+        // UTILIDADES Y REQUISICIONES / RECEPCIÓN
+        function nextConsecutive(prefix, list, field) {
+            let max = 0;
+            (list || []).forEach(item => {
+                const value = item && item[field];
+                const m = value ? String(value).match(/(\d+)$/) : null;
+                if (m) max = Math.max(max, Number(m[1]));
+            });
+            return prefix + String(max + 1).padStart(4, '0');
+        }
+
+        function registrarMovimiento(tipo, documento, prodId, cantidad, fecha, referencia) {
+            db.movimientos.push({ id: Date.now() + Math.random(), tipo, documento, prodId, cantidad, fecha, referencia });
+        }
+
+        function initDates() {
+            const today = new Date().toISOString().slice(0,10);
+            ['req-fecha','rec-fecha'].forEach(id => { const el=document.getElementById(id); if(el && !el.value) el.value=today; });
+        }
+
+        function addReqProductRow() {
+            const c=document.getElementById('req-products-list'); if(!c) return;
+            const d=document.createElement('div'); d.className='product-line-item';
+            const opts=db.products.map(p=>`<option value="${p.id}">${p.code} - ${p.desc}</option>`).join('');
+            d.innerHTML=`<select required class="req-prod-id">${opts}</select><input type="number" min="1" value="1" class="req-prod-qty" required><button type="button" class="btn btn-danger" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>`;
+            c.appendChild(d);
+        }
+
+        function saveRequisicion(e) {
+            e.preventDefault();
+            const rows=document.querySelectorAll('#req-products-list .product-line-item');
+            if(!rows.length) return alert('Agregue al menos un producto.');
+            const items=[];
+            rows.forEach(r=>items.push({prodId:Number(r.querySelector('.req-prod-id').value), solicitado:Number(r.querySelector('.req-prod-qty').value), recibido:0}));
+            const req={id:Date.now(), consecutivo:nextConsecutive('RQ-',db.requisiciones,'consecutivo'), fecha:document.getElementById('req-fecha').value, proveedor:document.getElementById('req-proveedor').value, solicitante:document.getElementById('req-solicitante').value, obs:document.getElementById('req-obs').value, items};
+            db.requisiciones.push(req); saveDB(); renderRequisiciones(); loadRecepcionDropdown();
+            document.querySelector('#tab-requisiciones form').reset(); document.getElementById('req-products-list').innerHTML=''; addReqProductRow(); initDates();
+            alert(`Requisición ${req.consecutivo} registrada.`);
+        }
+
+        function renderRequisiciones() {
+            const body=document.getElementById('req-history-body'); if(!body) return;
+            let pendingReq=0,pendingUnits=0;
+            db.requisiciones.forEach(r=>r.items.forEach(i=>{pendingUnits+=Math.max(0,i.solicitado-i.recibido);}));
+            pendingReq=db.requisiciones.filter(r=>r.items.some(i=>i.recibido<i.solicitado)).length;
+            document.getElementById('req-count').innerText=db.requisiciones.length;
+            document.getElementById('req-pending-count').innerText=pendingReq;
+            document.getElementById('rec-count').innerText=db.recepciones.length;
+            document.getElementById('req-pending-units').innerText=pendingUnits;
+            if(!db.requisiciones.length){body.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">No hay requisiciones registradas.</td></tr>';return;}
+            body.innerHTML=db.requisiciones.slice().reverse().map(r=>{
+                const pending=r.items.some(i=>i.recibido<i.solicitado); const complete=r.items.every(i=>i.recibido>=i.solicitado);
+                const status=complete?'<span class="badge badge-success">Completa</span>':(r.items.some(i=>i.recibido>0)?'<span class="badge badge-info">Parcial</span>':'<span class="badge badge-danger">Pendiente</span>');
+                const details=r.items.map(i=>{const p=db.products.find(x=>x.id===i.prodId);return `${p?p.desc:'Producto'}: ${i.recibido}/${i.solicitado}`;}).join('<br>');
+                return `<tr><td><strong>${r.consecutivo}</strong></td><td>${r.fecha}</td><td>${r.proveedor}</td><td>${r.solicitante}</td><td>${details}</td><td>${status}</td></tr>`;
+            }).join('');
+        }
+
+        function loadRecepcionDropdown(){
+            const sel=document.getElementById('rec-requisicion'); if(!sel) return;
+            const pending=db.requisiciones.filter(r=>r.items.some(i=>i.recibido<i.solicitado));
+            sel.innerHTML='<option value="">Seleccione una requisición pendiente</option>'+pending.map(r=>`<option value="${r.id}">${r.consecutivo} - ${r.proveedor} - ${r.solicitante}</option>`).join('');
+            loadRecepcionItems();
+        }
+
+        function loadRecepcionItems(){
+            const c=document.getElementById('rec-items-list'); if(!c) return; const id=Number(document.getElementById('rec-requisicion').value); const r=db.requisiciones.find(x=>x.id===id);
+            if(!r){c.innerHTML='<p style="color:var(--text-muted);">Seleccione una requisición para ver los pendientes.</p>';return;}
+            c.innerHTML=r.items.filter(i=>i.recibido<i.solicitado).map((i,idx)=>{const p=db.products.find(x=>x.id===i.prodId);const pend=i.solicitado-i.recibido;return `<div class="product-line-item"><div><strong>${p?p.code:'-'}</strong> - ${p?p.desc:'Producto'}<br><small>Pedido: ${i.solicitado} | Recibido: ${i.recibido} | Pendiente: ${pend}</small></div><input type="number" min="0" max="${pend}" value="0" class="rec-item-qty" data-index="${r.items.indexOf(i)}" placeholder="Recibir ahora"></div>`;}).join('');
+        }
+
+        function saveRecepcion(e){
+            e.preventDefault(); const reqId=Number(document.getElementById('rec-requisicion').value); const req=db.requisiciones.find(r=>r.id===reqId); if(!req) return alert('Seleccione una requisición.');
+            const rows=document.querySelectorAll('#rec-items-list .rec-item-qty'); let any=false; const received=[];
+            for (const input of rows) { const qty=Number(input.value); const idx=Number(input.dataset.index); if(qty>0){ const item=req.items[idx]; const pending=item.solicitado-item.recibido; if(qty>pending) return alert(`La cantidad recibida no puede superar el pendiente (${pending}).`); received.push({prodId:item.prodId,qty}); any=true; } }
+            if(!any) return alert('Indique al menos una cantidad recibida.');
+            received.forEach(x=>{const item=req.items.find(i=>i.prodId===x.prodId); item.recibido+=x.qty; const p=db.products.find(pr=>pr.id===x.prodId); if(p)p.stock+=x.qty; registrarMovimiento('ENTRADA',req.consecutivo,x.prodId,x.qty,document.getElementById('rec-fecha').value,req.proveedor);});
+            db.recepciones.push({id:Date.now(),consecutivo:nextConsecutive('REC-',db.recepciones,'consecutivo'),requisicion:req.consecutivo,requisicionId:req.id,fecha:document.getElementById('rec-fecha').value,persona:document.getElementById('rec-persona').value,obs:document.getElementById('rec-obs').value,items:received});
+            saveDB(); renderRequisiciones(); loadRecepcionDropdown(); renderInventory(); renderDashboard();
+            document.getElementById('rec-persona').value=''; document.getElementById('rec-obs').value=''; document.getElementById('rec-fecha').value=new Date().toISOString().slice(0,10);
+            alert('Recepción registrada. Las cantidades recibidas fueron sumadas al inventario.');
+        }
+
         // ENVÍOS SEDE OPERATIVA LOGIC
         function addESProductRow() {
             const container = document.getElementById('es-products-list');
@@ -1811,7 +1969,7 @@
                 });
             });
 
-            const esNum = 'PLN-' + String(db.enviosSede.length + 1).padStart(4, '0');
+            const esNum = nextConsecutive('PLN-', db.enviosSede, 'consecutivo');
             const esData = {
                 id: Date.now(),
                 consecutivo: esNum,
