@@ -521,9 +521,47 @@
             .voucher-content { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; padding: 0; box-shadow: none; }
             .no-print { display: none !important; }
         }
-    </style>
+    
+        /* LOGIN */
+        #login-overlay {
+            position: fixed; inset: 0; z-index: 99999;
+            background: rgba(15, 23, 42, .72);
+            display: none; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .login-card {
+            width: min(420px, 100%); background: #fff; border-radius: 18px;
+            padding: 30px; box-shadow: 0 25px 80px rgba(0,0,0,.25);
+        }
+        .login-brand { text-align:center; margin-bottom:22px; }
+        .login-brand h2 { margin:0 0 6px; }
+        .login-brand p { margin:0; color:var(--text-muted); }
+        .login-error { color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; padding:10px 12px; border-radius:8px; margin-bottom:14px; display:none; font-size:13px; }
+        body.logged-out .app-shell { filter: blur(2px); pointer-events:none; user-select:none; }
+        .btn-logout { cursor:pointer; border:0; }
+</style>
 </head>
 <body>
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="login-brand">
+                <h2>ALMACÉN VG</h2>
+                <p>Ingreso al sistema</p>
+            </div>
+            <div id="login-error" class="login-error">Usuario o contraseña incorrectos.</div>
+            <form onsubmit="return login(event)">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" id="login-user" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="login-pass" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Ingresar</button>
+            </form>
+        </div>
+    </div>
 
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
@@ -1270,7 +1308,7 @@
             users: JSON.parse(localStorage.getItem('db_users')) || [
                 { id: 1, name: 'admin', pass: 'admin123', role: 'Administrador', blocked: false }
             ],
-            currentUser: JSON.parse(localStorage.getItem('db_currentUser')) || { name: 'admin', role: 'Administrador' }
+            currentUser: JSON.parse(sessionStorage.getItem('vg_currentUser') || 'null')
         };
 
         function saveDB() {
@@ -1286,17 +1324,25 @@
             localStorage.setItem('db_areas', JSON.stringify(db.areas));
             localStorage.setItem('db_categories', JSON.stringify(db.categories));
             localStorage.setItem('db_users', JSON.stringify(db.users));
-            localStorage.setItem('db_currentUser', JSON.stringify(db.currentUser));
+            if (db.currentUser) sessionStorage.setItem('vg_currentUser', JSON.stringify(db.currentUser));
+            else sessionStorage.removeItem('vg_currentUser');
             updateDashboardStats();
         }
 
         // INIT SETUP
         document.addEventListener('DOMContentLoaded', () => {
+            const session = JSON.parse(sessionStorage.getItem('vg_currentUser') || 'null');
+            if (session) db.currentUser = session;
+            else {
+                db.currentUser = null;
+                document.body.classList.add('logged-out');
+                document.getElementById('login-overlay').style.display = 'flex';
+            }
             const today = new Date().toISOString().split('T')[0];
             document.querySelectorAll('input[type="date"]').forEach(inp => inp.value = today);
 
-            document.getElementById('currentUserDisplay').innerText = db.currentUser.name;
-            document.getElementById('currentUserAvatar').innerText = db.currentUser.name.charAt(0).toUpperCase();
+            document.getElementById('currentUserDisplay').innerText = db.currentUser ? db.currentUser.name : 'Invitado';
+            document.getElementById('currentUserAvatar').innerText = db.currentUser ? db.currentUser.name.charAt(0).toUpperCase() : '?';
 
             populateDropdowns();
             renderDashboard();
@@ -2245,8 +2291,43 @@
             document.getElementById('print-modal').style.display = 'none';
         }
 
+        function login(e) {
+            if (e) e.preventDefault();
+            const username = document.getElementById('login-user').value.trim();
+            const password = document.getElementById('login-pass').value;
+            const user = db.users.find(u => String(u.name || '').trim().toLowerCase() === username.toLowerCase() && String(u.pass ?? '') === password);
+            const error = document.getElementById('login-error');
+            if (!user) {
+                error.innerText = 'Usuario o contraseña incorrectos.';
+                error.style.display = 'block';
+                return false;
+            }
+            if (user.blocked) {
+                error.innerText = 'Este usuario está bloqueado. Comuníquese con el administrador.';
+                error.style.display = 'block';
+                return false;
+            }
+            db.currentUser = { id: user.id, name: user.name, role: user.role };
+            sessionStorage.setItem('vg_currentUser', JSON.stringify(db.currentUser));
+            document.getElementById('currentUserDisplay').innerText = user.name;
+            document.getElementById('currentUserAvatar').innerText = user.name.charAt(0).toUpperCase();
+            document.getElementById('login-overlay').style.display = 'none';
+            document.body.classList.remove('logged-out');
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            error.style.display = 'none';
+            return false;
+        }
+
         function logout() {
-            alert('Sesión cerrada correctamente.');
+            sessionStorage.removeItem('vg_currentUser');
+            db.currentUser = null;
+            document.body.classList.add('logged-out');
+            document.getElementById('login-overlay').style.display = 'flex';
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-error').style.display = 'none';
+            document.getElementById('login-user').focus();
         }
     </script>
 </body>
