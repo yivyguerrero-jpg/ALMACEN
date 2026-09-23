@@ -1379,7 +1379,7 @@ table thead th{background:#f5f8fc;color:#587086;font-size:11px;letter-spacing:.3
                     <section class="cfg-panel"><div class="cfg-panel-head"><div><h3>Áreas y responsables</h3><small>Catálogo utilizado en las salidas por área.</small></div></div><form onsubmit="saveArea(event)"><div class="form-grid" style="margin-bottom:10px"><div class="form-group"><label>Nombre del área</label><input type="text" id="cfg-area-name" required placeholder="Ej. Mantenimiento"></div><div class="form-group"><label>Responsable / jefe</label><input type="text" id="cfg-area-boss" placeholder="Nombre responsable"></div></div><button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Agregar área</button></form><div id="cfg-areas-list" class="cfg-list" style="margin-top:15px"></div></section>
                     <section class="cfg-panel"><div class="cfg-panel-head"><div><h3>Categorías de inventario</h3><small>Clasificación de los productos.</small></div></div><form onsubmit="saveCategory(event)"><div class="form-group" style="margin-bottom:10px"><label>Nueva categoría</label><input type="text" id="cfg-cat-name" required placeholder="Ej. EPP"></div><button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Agregar categoría</button></form><div id="cfg-cats-list" class="cfg-list" style="margin-top:15px"></div></section>
                     <section class="cfg-panel cfg-wide"><div class="cfg-panel-head"><div><h3>Usuarios, contraseñas y roles</h3><small>Solo el Administrador puede crear, bloquear, editar o eliminar usuarios.</small></div></div><form id="cfg-user-form" onsubmit="saveUser(event)"><div class="form-grid"><div class="form-group"><label>Usuario</label><input type="text" id="cfg-user-name" required placeholder="usuario"></div><div class="form-group"><label>Contraseña</label><input type="password" id="cfg-user-pass" required placeholder="Contraseña"></div><div class="form-group"><label>Rol</label><select id="cfg-user-role"><option value="Administrador">Administrador</option><option value="Almacenista">Almacenista</option><option value="Consulta">Consulta</option></select></div></div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button type="submit" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Crear usuario</button><button type="button" class="btn btn-secondary" onclick="clearUserForm()">Limpiar</button></div></form><div id="cfg-users-list" class="cfg-list" style="margin-top:16px;max-height:none"></div><div class="cfg-note"><i class="fa-solid fa-shield-halved"></i> Los roles disponibles son Administrador, Almacenista y Consulta.</div></section>
-                    <section class="cfg-panel cfg-wide"><div class="cfg-panel-head"><div><h3>Respaldo y mantenimiento</h3><small>Conserva una copia de los datos antes de realizar cambios importantes.</small></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" onclick="downloadBackup()"><i class="fa-solid fa-file-arrow-down"></i> Descargar copia JSON</button><button class="btn btn-secondary" onclick="document.getElementById('restore-file').click()"><i class="fa-solid fa-file-arrow-up"></i> Restaurar copia JSON</button><button class="btn btn-secondary" onclick="printConfigSummary()"><i class="fa-solid fa-print"></i> Imprimir resumen</button></div></section><section class="cfg-panel cfg-wide"><div class="cfg-panel-head"><div><h3><i class="fa-solid fa-cloud"></i> Base central ALMACÉN VG</h3><small>Conecta este equipo a la misma base central que utilizará la página web.</small></div><span id="cfg-cloud-badge" class="badge badge-warning">No configurada</span></div><div class="cloud-panel"><div class="form-grid"><div class="form-group"><label>Project URL de Supabase</label><input type="url" id="cloud-url" placeholder="https://tu-proyecto.supabase.co"></div><div class="form-group"><label>Publishable key</label><input type="password" id="cloud-key" placeholder="sb_publishable_..."></div></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn btn-primary" onclick="connectCloud()"><i class="fa-solid fa-plug"></i> Conectar base central</button><button class="btn btn-secondary" onclick="downloadFromCloud()"><i class="fa-solid fa-cloud-arrow-down"></i> Descargar desde central</button><button class="btn btn-secondary" onclick="uploadToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> Subir datos de este equipo</button></div><div class="cfg-note" style="margin-top:12px"><i class="fa-solid fa-circle-info"></i> Esta etapa centraliza la operación. La lista de usuarios y contraseñas permanece local para no publicar credenciales en la base compartida. No introduzcas aquí una Secret key ni service_role.</div></div></section>
+                    <section class="cfg-panel cfg-wide"><div class="cfg-panel-head"><div><h3>Respaldo y mantenimiento</h3><small>Conserva una copia de los datos antes de realizar cambios importantes.</small></div></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" onclick="downloadBackup()"><i class="fa-solid fa-file-arrow-down"></i> Descargar copia JSON</button><button class="btn btn-secondary" onclick="document.getElementById('restore-file').click()"><i class="fa-solid fa-file-arrow-up"></i> Restaurar copia JSON</button><button class="btn btn-secondary" onclick="printConfigSummary()"><i class="fa-solid fa-print"></i> Imprimir resumen</button></div></section><section class="cfg-panel cfg-wide"><div class="cfg-panel-head"><div><h3><i class="fa-solid fa-cloud"></i> Base central ALMACÉN VG</h3><small>Esta página ya viene configurada para la base central ALMACÉN VG. No necesitas configurar cada computador.</small></div><span id="cfg-cloud-badge" class="badge badge-warning">No configurada</span></div><div class="cloud-panel"><div class="form-grid"><div class="form-group"><label>Project URL de Supabase</label><input type="url" id="cloud-url" readonly placeholder="https://tu-proyecto.supabase.co"></div><div class="form-group"><label>Publishable key</label><input type="password" id="cloud-key" readonly placeholder="sb_publishable_..."></div></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn btn-primary" onclick="cloudConnectAndLoad(false)"><i class="fa-solid fa-plug"></i> Conectar base central</button><button class="btn btn-secondary" onclick="downloadFromCloud()"><i class="fa-solid fa-cloud-arrow-down"></i> Descargar desde central</button><button class="btn btn-secondary" onclick="uploadToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> Subir datos de este equipo</button></div><div class="cfg-note" style="margin-top:12px"><i class="fa-solid fa-circle-info"></i> La conexión central está integrada en esta versión. Las contraseñas las administra Supabase Auth; nunca se guardan en el inventario ni en este archivo. La Publishable key es la única clave utilizada por el navegador.</div></div></section>
                 </div>
             </div>
 
@@ -1512,7 +1512,7 @@ table thead th{background:#f5f8fc;color:#587086;font-size:11px;letter-spacing:.3
 
 
         // ===== BASE CENTRAL ALMACÉN VG / SUPABASE =====
-        const VG_CLOUD = { url: localStorage.getItem('vg_cloud_url') || '', key: localStorage.getItem('vg_cloud_key') || '', client: null, ready: false, loading: false, timer: null, lastUpdatedAt: localStorage.getItem('vg_cloud_updated_at') || '' };
+        const VG_CLOUD = { url: 'https://oetizuptnxfxlszishif.supabase.co', key: 'sb_publishable_pTxkYmHUSbTd74d7_AJOcw_TjBTmmMv', client: null, ready: false, loading: false, timer: null, lastUpdatedAt: localStorage.getItem('vg_cloud_updated_at') || '' };
         window.VG_CLOUD_READY = false; window.VG_CLOUD_LOADING = false; let vgCloudSaveTimer = null;
 
         function cloudSetStatus(text, kind=''){
@@ -1531,16 +1531,17 @@ table thead th{background:#f5f8fc;color:#587086;font-size:11px;letter-spacing:.3
         async function cloudConnectAndLoad(showPrompt=true){
             if(!VG_CLOUD.url || !VG_CLOUD.key){ cloudSetStatus('No configurada'); return false; }
             if(!window.supabase){ cloudSetStatus('Error de librería','error'); return false; }
-            VG_CLOUD.client = window.supabase.createClient(VG_CLOUD.url, VG_CLOUD.key);
+            if(!VG_CLOUD.client) VG_CLOUD.client = window.supabase.createClient(VG_CLOUD.url, VG_CLOUD.key);
             VG_CLOUD.loading = true; window.VG_CLOUD_LOADING=true; cloudSetStatus('Conectando…','loading');
             try{
-                const auth=await VG_CLOUD.client.auth.signInAnonymously();
-                if(auth.error) throw auth.error;
+                const {data:sessionData,error:sessionError}=await VG_CLOUD.client.auth.getSession();
+                if(sessionError) throw sessionError;
+                if(!sessionData?.session) throw new Error('No hay una sesión de usuario autenticada. Inicia sesión primero.');
                 const {data,error}=await VG_CLOUD.client.from('almacen_state').select('state,updated_at,version').eq('id',1).maybeSingle();
                 if(error) throw error;
                 VG_CLOUD.ready=true; window.VG_CLOUD_READY=true; cloudSetStatus('Base central conectada','connected');
                 if(data && data.state){ applyCloudState(data.state); VG_CLOUD.lastUpdatedAt=data.updated_at||''; localStorage.setItem('vg_cloud_updated_at',VG_CLOUD.lastUpdatedAt); }
-                else if(showPrompt){ if(confirm('La base central está vacía. ¿Deseas subir los datos de este equipo al ALMACÉN VG central?')) await uploadToCloud(); }
+                else if(showPrompt){ /* La central está vacía: no sobrescribir automáticamente. */ }
                 startCloudPolling(); return true;
             }catch(err){ VG_CLOUD.ready=false; window.VG_CLOUD_READY=false; cloudSetStatus('Error de base central','error'); alert('No se pudo conectar con Supabase: '+(err.message||err)); return false; }
             finally{ VG_CLOUD.loading=false; window.VG_CLOUD_LOADING=false; }
@@ -1577,15 +1578,25 @@ table thead th{background:#f5f8fc;color:#587086;font-size:11px;letter-spacing:.3
 
         // INIT SETUP
         document.addEventListener('DOMContentLoaded', async () => {
-            const session = JSON.parse(sessionStorage.getItem('vg_currentUser') || 'null');
-            if (session) db.currentUser = session;
-            else {
-                db.currentUser = null;
-                document.body.classList.add('logged-out');
-                document.getElementById('login-overlay').style.display = 'flex';
-            }
+            db.currentUser = null;
+            document.body.classList.add('logged-out');
+            document.getElementById('login-overlay').style.display = 'flex';
             initCloudUI();
-            if (VG_CLOUD.url && VG_CLOUD.key) await cloudConnectAndLoad(false);
+            if (VG_CLOUD.url && VG_CLOUD.key && window.supabase) {
+                try {
+                    if(!VG_CLOUD.client) VG_CLOUD.client = window.supabase.createClient(VG_CLOUD.url, VG_CLOUD.key);
+                    const {data:authData} = await VG_CLOUD.client.auth.getSession();
+                    const u = authData?.session?.user;
+                    if (u) {
+                        const meta = u.user_metadata || {};
+                        db.currentUser = { id:u.id, name:meta.display_name || meta.name || meta.username || u.email || 'Usuario', role:meta.role || 'Consulta' };
+                        sessionStorage.setItem('vg_currentUser', JSON.stringify(db.currentUser));
+                        document.getElementById('login-overlay').style.display = 'none';
+                        document.body.classList.remove('logged-out');
+                        await cloudConnectAndLoad(false);
+                    }
+                } catch(e) { console.warn('Sesión central:', e); }
+            }
             const today = new Date().toISOString().split('T')[0];
             document.querySelectorAll('input[type="date"]').forEach(inp => inp.value = today);
 
@@ -3231,38 +3242,62 @@ table thead th{background:#f5f8fc;color:#587086;font-size:11px;letter-spacing:.3
             document.getElementById('print-modal').style.display = 'none';
         }
 
-        function login(e) {
+        async function login(e) {
             if (e) e.preventDefault();
             const username = document.getElementById('login-user').value.trim();
             const password = document.getElementById('login-pass').value;
-            const user = db.users.find(u => String(u.name || '').trim().toLowerCase() === username.toLowerCase() && String(u.pass ?? '') === password);
             const error = document.getElementById('login-error');
-            if (!user) {
-                error.innerText = 'Usuario o contraseña incorrectos.';
-                error.style.display = 'block';
-                return false;
-            }
-            if (user.blocked) {
-                error.innerText = 'Este usuario está bloqueado. Comuníquese con el administrador.';
-                error.style.display = 'block';
-                return false;
-            }
-            db.currentUser = { id: user.id, name: user.name, role: user.role };
-            sessionStorage.setItem('vg_currentUser', JSON.stringify(db.currentUser));
-            document.getElementById('currentUserDisplay').innerText = user.name;
-            document.getElementById('currentUserAvatar').innerText = user.name.charAt(0).toUpperCase();
-            applyRolePermissions();
-            document.getElementById('login-overlay').style.display = 'none';
-            document.body.classList.remove('logged-out');
-            document.getElementById('login-user').value = '';
-            document.getElementById('login-pass').value = '';
             error.style.display = 'none';
+            if(!username || !password){ error.innerText='Ingresa usuario y contraseña.'; error.style.display='block'; return false; }
+            if(!VG_CLOUD.url || !VG_CLOUD.key){ error.innerText='No se pudo cargar la configuración central.'; error.style.display='block'; return false; }
+            try{
+                if(!VG_CLOUD.client) VG_CLOUD.client = window.supabase.createClient(VG_CLOUD.url, VG_CLOUD.key);
+                // El usuario visible (ej. YIVY GUERRERO) se busca en el directorio central.
+                // La contraseña nunca se guarda en el HTML ni en la base de inventario.
+                const normalizedUser = username.trim().toUpperCase();
+                const {data:profileRows,error:lookupError}=await VG_CLOUD.client
+                    .rpc('lookup_login', { p_username: normalizedUser });
+                if(lookupError) throw lookupError;
+                const profileLookup = Array.isArray(profileRows) ? profileRows[0] : profileRows;
+                if(!profileLookup) throw new Error('Usuario no encontrado en el directorio central.');
+                if(profileLookup.blocked) throw new Error('Usuario bloqueado.');
+                const {data,error:authError}=await VG_CLOUD.client.auth.signInWithPassword({email:profileLookup.email,password});
+                if(authError) throw authError;
+                const u=data?.user;
+                if(!u) throw new Error('No se recibió el usuario autenticado.');
+                const {data:profile,error:profileError}=await VG_CLOUD.client
+                    .from('profiles')
+                    .select('id,email,username,display_name,role,blocked')
+                    .eq('id',u.id)
+                    .maybeSingle();
+                if(profileError) throw profileError;
+                if(profile?.blocked) throw new Error('Usuario bloqueado.');
+                db.currentUser={id:u.id,name:profile?.display_name||profile?.username||username,role:profile?.role||'Consulta'};
+                sessionStorage.setItem('vg_currentUser',JSON.stringify(db.currentUser));
+                document.getElementById('currentUserDisplay').innerText=db.currentUser.name;
+                document.getElementById('currentUserAvatar').innerText=db.currentUser.name.charAt(0).toUpperCase();
+                document.getElementById('login-overlay').style.display='none';
+                document.body.classList.remove('logged-out');
+                applyRolePermissions();
+                const connected=await cloudConnectAndLoad(false);
+                if(!connected) throw new Error('No se pudo conectar con la base central.');
+                document.getElementById('login-user').value='';
+                document.getElementById('login-pass').value='';
+            }catch(err){
+                error.innerText = (err && /profiles|relation|column/i.test(String(err.message||err))) ? 'El directorio central de usuarios aún no está configurado. Ejecuta la configuración de profiles en Supabase.' : 'Usuario o contraseña incorrectos.';
+                error.style.display='block';
+                console.error('Login central:',err);
+                return false;
+            }
             return false;
         }
 
-        function logout() {
+        async function logout() {
+            try{ if(VG_CLOUD.client) await VG_CLOUD.client.auth.signOut(); }catch(e){ console.warn(e); }
             sessionStorage.removeItem('vg_currentUser');
             db.currentUser = null;
+            VG_CLOUD.ready=false; window.VG_CLOUD_READY=false;
+            if(VG_CLOUD.timer) clearInterval(VG_CLOUD.timer);
             document.body.classList.add('logged-out');
             document.getElementById('login-overlay').style.display = 'flex';
             applyRolePermissions();
